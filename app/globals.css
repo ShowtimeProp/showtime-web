@@ -1,26 +1,279 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-1: #0b0a10; /* page background */
+  --bg-2: #12101a; /* section background */
+  --card: #191624; /* card surface */
+  --border: rgba(255,255,255,0.08);
+  --text: #e8e7ef;
+  --muted: #b3b0c3;
+  --primary: #ffd84d; /* your yellow */
+  --primary-600: #f1c93a;
+  --primary-700: #d7b52f;
+
+  /* spotlight defaults */
+  --spot-x: 50%;
+  --spot-y: 50%;
+  /* slightly softer default glow to avoid harsh hotspots */
+  --spot-color: rgba(124, 58, 237, 0.22); /* violet */
+  --spot-color-2: rgba(37, 99, 235, 0.16); /* blue */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--bg-1);
+  --color-foreground: var(--text);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: radial-gradient(1200px 600px at 20% -10%, rgba(124,58,237,0.15), transparent 60%),
+              radial-gradient(900px 500px at 80% -20%, rgba(37,99,235,0.10), transparent 60%),
+              var(--bg-1);
+  color: var(--text);
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  overflow-x: hidden; /* prevent accidental horizontal scrollbars */
+}
+
+/* Page-level halo background (similar to card halos) */
+.halo-page { position: relative; overflow-x: clip; }
+.halo-page::before {
+  content: "";
+  position: absolute;
+  inset: -200px -40px -120px -40px; /* extend a bit to avoid hard edges */
+  pointer-events: none;
+  z-index: -1;
+  filter: blur(80px);
+  opacity: 0.22;
+  mix-blend-mode: screen;
+  transform: translate3d(var(--haloX, 0px), var(--haloY, 0px), 0);
+  transition: transform 220ms ease-out;
+  will-change: transform;
+  background:
+    radial-gradient(closest-side, rgba(255,96,124,0.36), rgba(255,96,124,0.10) 58%, transparent 72%) 60% 30% / 900px 900px no-repeat,
+    radial-gradient(closest-side, rgba(124,97,255,0.32), rgba(124,97,255,0.10) 58%, transparent 72%) 30% 60% / 900px 900px no-repeat;
+}
+
+/* Card surface */
+.card-surface {
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+/* Spotlight effect (mouse-follow) */
+.spotlight {
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(500px 300px at var(--spot-x) var(--spot-y), var(--spot-color), transparent 60%),
+              radial-gradient(700px 400px at calc(var(--spot-x) + 10%) calc(var(--spot-y) + 10%), var(--spot-color-2), transparent 70%),
+              var(--card);
+  transition: background 150ms ease-out, transform 150ms ease-out;
+}
+.spotlight:hover {
+  /* a touch stronger on hover */
+  background: radial-gradient(520px 320px at var(--spot-x) var(--spot-y), rgba(124, 58, 237, 0.28), transparent 62%),
+              radial-gradient(740px 420px at calc(var(--spot-x) + 10%) calc(var(--spot-y) + 10%), rgba(37, 99, 235, 0.20), transparent 72%),
+              var(--card);
+  transform: translateY(-1px);
+}
+.spotlight::after {
+  content: "";
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--border);
+  pointer-events: none;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.95rem; font-weight: 600;
+  border: 1px solid var(--border);
+  transition: transform 120ms ease, background 180ms ease, color 120ms ease, box-shadow 180ms ease;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  color: #0b0a10; background: var(--primary);
+  border-color: rgba(0,0,0,0.08);
+}
+.btn-primary:hover { background: var(--primary-600); color: #fff; }
+.btn-primary:active { background: var(--primary-700); }
+
+/* Success (WhatsApp) */
+.btn-success {
+  color: #052e12;
+  background: #22c55e; /* green-500 */
+  border-color: rgba(0,0,0,0.1);
+}
+.btn-success:hover { background: #16a34a; /* green-600 */ color: #fff; box-shadow: 0 8px 22px rgba(34,197,94,0.28); }
+.btn-success:active { background: #15803d; /* green-700 */ }
+
+/* Outline Primary (only border in primary color) */
+.btn-outline-primary {
+  color: var(--text);
+  background: transparent;
+  border-color: var(--primary);
+}
+.btn-outline-primary:hover {
+  background: rgba(255, 216, 77, 0.1);
+  border-color: var(--primary-600);
+}
+
+/* Micro animation: subtle pulse every 2s */
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.45); transform: translateY(0); }
+  40% { box-shadow: 0 0 0 10px rgba(34,197,94,0.0); }
+  60% { transform: translateY(-1px); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.0); transform: translateY(0); }
+}
+.pulse-2s { animation: pulseRing 2s ease-out infinite; }
+
+.btn-ghost {
+  color: var(--text); background: transparent;
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.04); }
+
+.btn-gradient {
+  color: #0b0a10;
+  background: linear-gradient(90deg, var(--primary) 0%, #ffe277 50%, var(--primary) 100%);
+  background-size: 200% 100%;
+  background-position: 0% 0%;
+  border-color: rgba(0,0,0,0.08);
+}
+.btn-gradient:hover {
+  background-position: 100% 0%;
+  box-shadow: 0 6px 22px rgba(255, 216, 77, 0.25);
+}
+
+/* Utility containers */
+.container-page { max-width: 1200px; margin: 0 auto; padding: 0 1.25rem; }
+.section { padding: 4rem 0; }
+
+/* Muted text */
+.text-muted { color: var(--muted); }
+
+/* Brand link hover glow */
+.brand-link {
+}
+.brand-link:hover .brand-title {
+  text-shadow: 0 0 18px rgba(255, 216, 77, 0.35);
+}
+
+.brand-logo {
+  transition: box-shadow 160ms ease;
+}
+.brand-link:hover .brand-logo {
+  box-shadow: 0 0 0 2px rgba(255, 216, 77, 0.5), 0 0 16px rgba(255, 216, 77, 0.25);
+}
+/* --- Article / Blog typography --- */
+.prose-blog {
+  max-width: none;
+}
+.prose-blog p {
+  margin: 0.65rem 0 0.95rem;
+  line-height: 1.7;
+}
+.prose-blog h2 {
+  margin-top: 2rem;
+  margin-bottom: 0.6rem;
+  font-size: 1.6rem;
+  line-height: 1.25;
+  font-weight: 800;
+}
+.prose-blog h3 {
+  margin-top: 1.4rem;
+  margin-bottom: 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1.35;
+  font-weight: 700;
+}
+.prose-blog ul, .prose-blog ol {
+  margin: 0.75rem 0 1rem 0;
+  padding-left: 1.25rem;
+}
+.prose-blog ul { list-style: disc; }
+.prose-blog ol { list-style: decimal; }
+.prose-blog li { margin: 0.25rem 0; }
+.prose-blog li::marker { color: var(--primary); }
+.prose-blog blockquote {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--primary);
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+}
+.prose-blog a {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-blog a:hover { color: var(--primary); }
+.prose-blog strong { color: #fff; font-weight: 800; }
+.prose-blog em { color: #e6e1ff; }
+.prose-blog hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.16), transparent);
+  margin: 1.5rem 0;
+}
+
+/* Line clamp utilities (no Tailwind plugin required) */
+.clamp-1, .clamp-2, .clamp-3, .clamp-4 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.clamp-1 { -webkit-line-clamp: 1; }
+.clamp-2 { -webkit-line-clamp: 2; }
+.clamp-3 { -webkit-line-clamp: 3; }
+.clamp-4 { -webkit-line-clamp: 4; }
+
+/* Inline highlight mark */
+.prose-blog .mark-highlight {
+  background: rgba(255, 216, 77, 0.18);
+  border-bottom: 1px solid rgba(255, 216, 77, 0.55);
+  padding: 0 0.15rem;
+  border-radius: 4px;
+}
+
+/* Tables */
+.prose-blog table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+.prose-blog thead th {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+}
+.prose-blog th, .prose-blog td {
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 0.6rem 0.75rem;
+  vertical-align: top;
+}
+.prose-blog tbody tr:nth-child(odd) {
+  background: rgba(255,255,255,0.03);
+}
+.prose-blog .table-wrap { overflow-x: auto; }
+
+/* Dropcap for first paragraph */
+.prose-blog p:first-of-type::first-letter {
+  float: left;
+  font-size: 3.2rem;
+  line-height: 0.9;
+  font-weight: 800;
+  margin-right: 0.45rem;
+  margin-top: 0.15rem;
+  color: var(--primary);
+  text-shadow: 0 2px 14px rgba(255,216,77,0.25);
+}
+@media (max-width: 480px) {
+  .prose-blog p:first-of-type::first-letter {
+    font-size: 2.6rem;
+    margin-right: 0.35rem;
+  }
 }

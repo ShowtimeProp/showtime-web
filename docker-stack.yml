@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  web:
+    image: your-registry/showtime-new:latest # reemplaza con tu registry/imagen
+    environment:
+      NEXT_PUBLIC_SITE_URL: "https://tu-dominio.com"
+      SANITY_PROJECT_ID: "${SANITY_PROJECT_ID}"
+      SANITY_DATASET: "${SANITY_DATASET:-production}"
+      SANITY_API_VERSION: "2023-10-01"
+      # SANITY_API_TOKEN: "${SANITY_API_TOKEN}" # sólo si necesitas contenido privado
+      NODE_ENV: "production"
+    deploy:
+      replicas: 2
+      update_config:
+        order: start-first
+        parallelism: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.showtime.rule=Host(`tu-dominio.com`)"
+        - "traefik.http.routers.showtime.entrypoints=websecure"
+        - "traefik.http.routers.showtime.tls=true"
+        - "traefik.http.routers.showtime.tls.certresolver=letsencrypt" # adapta al tuyo
+        - "traefik.http.services.showtime.loadbalancer.server.port=3000"
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    external: true
