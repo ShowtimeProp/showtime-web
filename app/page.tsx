@@ -5,6 +5,9 @@ import Hero from "@/components/Hero";
 import Packs from "@/components/Packs";
 import HeroCarousel from "@/components/HeroCarousel";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Single-home fallback (legacy)
 const query = `*[_type == "home"][0]{
   heroKicker,
