@@ -15,7 +15,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+RUN groupadd -g 1001 nodejs \
+  && useradd -u 1001 -g nodejs -m -s /bin/bash nextjs
 
 # Copy standalone server output and assets
 COPY --from=builder /app/.next/standalone ./
