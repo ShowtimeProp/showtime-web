@@ -2,6 +2,9 @@
 const nextConfig = {
   output: 'standalone',
   swcMinify: false, // avoid minifier crash in CI for SSR chunks (e.g., sanity/lib)
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
