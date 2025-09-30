@@ -1,10 +1,15 @@
 import imageUrlBuilder from "@sanity/image-url";
 import type { Image } from "sanity";
 
-// Must work both on server and client deterministically.
-// Use ONLY NEXT_PUBLIC_* vars so SSR and CSR see the same values.
-const projectId = (process.env.NEXT_PUBLIC_SANITY_PROJECT_ID as string) || "";
-const dataset = (process.env.NEXT_PUBLIC_SANITY_DATASET as string) || "production";
+// Prefer NEXT_PUBLIC_* (works on both server and client). Fallback to server-only SANITY_* to be resilient.
+const projectId =
+  (process.env.NEXT_PUBLIC_SANITY_PROJECT_ID as string) ||
+  (process.env.SANITY_PROJECT_ID as string) ||
+  "";
+const dataset =
+  (process.env.NEXT_PUBLIC_SANITY_DATASET as string) ||
+  (process.env.SANITY_DATASET as string) ||
+  "production";
 
 const builder = imageUrlBuilder({ projectId, dataset });
 
