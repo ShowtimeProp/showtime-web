@@ -2,6 +2,9 @@ import Link from "next/link";
 import { sanityClient } from "@/lib/sanity/client";
 import { PortableText } from "@portabletext/react";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 type Params = { params: { slug: string } };
 
 const query = `*[_type == "service" && slug.current == $slug][0]{
