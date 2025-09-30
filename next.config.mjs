@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  swcMinify: false, // avoid minifier crash in CI for SSR chunks (e.g., sanity/lib)
   images: {
     remotePatterns: [
       {
