@@ -4,6 +4,9 @@ import { sanityClient } from "@/lib/sanity/client";
 import { urlFor } from "@/lib/sanity/image";
 import { PortableText } from "@portabletext/react";
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 type Params = { params: { slug: string } };
 
 const query = `*[_type == "project" && slug.current == $slug][0]{
