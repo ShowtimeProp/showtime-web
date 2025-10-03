@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
 import HaloParallax from '@/components/HaloParallax';
+import WhatsAppWidget from '@/components/WhatsAppWidget';
 
 export default function LocaleLayout({
   children,
@@ -20,6 +21,8 @@ export default function LocaleLayout({
       <SiteHeader locale={locale} basePath={basePath} />
       <main className="pt-20">{children}</main>
       <SiteFooter locale={locale} />
+      {/* Floating WhatsApp widget */}
+      <WhatsAppWidget locale={locale as 'es' | 'en' | 'pt'} />
     </>
   );
 }
