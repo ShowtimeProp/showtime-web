@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { buildAlternates, getBaseUrl, jsonLdOrganization, jsonLdWebsite, toLdJson } from "@/lib/seo";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,7 +20,21 @@ export const metadata: Metadata = {
   },
   description:
     "Servicios de marketing inmobiliario: fotografía profesional, tours virtuales, video 360, edición, planos Unreal Engine e IA con n8n.",
-  metadataBase: new URL("https://showtimeprop.com"),
+  metadataBase: new URL(getBaseUrl()),
+  alternates: buildAlternates("/"),
+  openGraph: {
+    type: "website",
+    title: "Showtime Prop — Real Estate Marketing",
+    description:
+      "Servicios de marketing inmobiliario: fotografía profesional, tours virtuales, video 360, edición, planos Unreal Engine e IA con n8n.",
+    url: getBaseUrl(),
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Showtime Prop",
+    description:
+      "Servicios de marketing inmobiliario: fotografía profesional, tours virtuales, video 360, edición, planos Unreal Engine e IA con n8n.",
+  },
 };
 
 export default function RootLayout({
@@ -32,6 +47,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {/* JSON-LD: Organization */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toLdJson(jsonLdOrganization()) }} />
+        {/* JSON-LD: WebSite (sitelinks search) */}
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: toLdJson(jsonLdWebsite()) }} />
         {children}
       </body>
     </html>

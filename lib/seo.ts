@@ -32,3 +32,40 @@ export function buildAlternatesFor(paths: Partial<Record<(typeof SUPPORTED_LOCAL
   }
   return { languages: map } as const;
 }
+
+export function canonical(pathname: string) {
+  const base = getBaseUrl();
+  const p = pathname.startsWith("/") ? pathname : `/${pathname}`;
+  return new URL(p, base).toString();
+}
+
+// JSON-LD helpers
+export function jsonLdOrganization() {
+  const base = getBaseUrl();
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'Showtime Prop',
+    url: base,
+    logo: `${base}/logo.png`,
+  };
+}
+
+export function jsonLdWebsite() {
+  const base = getBaseUrl();
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Showtime Prop',
+    url: base,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${base}/search?q={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+export function toLdJson(obj: any) {
+  return JSON.stringify(obj);
+}
