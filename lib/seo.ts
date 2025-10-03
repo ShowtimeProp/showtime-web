@@ -69,3 +69,17 @@ export function jsonLdWebsite() {
 export function toLdJson(obj: any) {
   return JSON.stringify(obj);
 }
+
+export function jsonLdService(params: { name: string; description?: string; url: string; image?: string; areaServed?: string }) {
+  const { name, description, url, image, areaServed } = params;
+  const ld: any = {
+    '@context': 'https://schema.org',
+    '@type': 'Service',
+    name,
+    url,
+  };
+  if (description) ld.description = description;
+  if (image) ld.image = image;
+  if (areaServed) ld.areaServed = areaServed;
+  return ld;
+}

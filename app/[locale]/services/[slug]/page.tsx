@@ -1,6 +1,6 @@
 import { sanityClient } from "@/lib/sanity/client";
 import { PortableText } from "@portabletext/react";
-import { buildAlternatesFor } from "@/lib/seo";
+import { buildAlternatesFor, canonical, jsonLdService, toLdJson } from "@/lib/seo";
 import { fetchSiteMeta } from "@/lib/site";
 import Image from "next/image";
 import { urlFor, imgPresets } from "@/lib/sanity/image";
@@ -48,6 +48,7 @@ export async function generateMetadata({ params }: Params) {
       pt: `/pt/servicos/${params.slug}`,
       en: `/en/services/${params.slug}`,
     }),
+    alternatesCanonical: canonical(`/${params.locale}/services/${params.slug}`),
     metadataBase: new URL(base),
     openGraph: {
       title,
@@ -82,6 +83,21 @@ export default async function ServiceDetail({ params }: Params) {
 
   return (
     <div className="halo-page px-6 py-12 max-w-[1100px] mx-auto">
+      {/* JSON-LD: Service */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: toLdJson(
+            jsonLdService({
+              name: data.title,
+              description: data.short,
+              url: canonical(`/${params.locale}/services/${params.slug}`),
+              image: data.icon ? imgPresets.heroTall(data.icon) : undefined,
+              areaServed: params.locale.toUpperCase(),
+            })
+          ),
+        }}
+      />
       <div className="mb-6">
         <Breadcrumbs items={[{ label: tHome, href: basePath }, { label: tServices, href: `${basePath}/services` }, { label: data.title }]} />
       </div>
