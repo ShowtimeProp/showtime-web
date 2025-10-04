@@ -32,17 +32,17 @@ export default function WhatsAppWidget({ locale }: Props) {
     () => ({
       es: {
         bubble: "👋 ¿Cómo podemos ayudarte hoy?",
-        wa: "Hola! Tengo una consulta sobre sus servicios.",
+        wa: "🤖 Hola! Tengo una consulta sobre sus servicios.",
         aria: "Abrir WhatsApp",
       },
       en: {
         bubble: "👋 How can we help you today?",
-        wa: "Hi! I have a question about your services.",
+        wa: "🤖 Hi! I have a question about your services.",
         aria: "Open WhatsApp",
       },
       pt: {
         bubble: "👋 Como podemos te ajudar hoje?",
-        wa: "Olá! Tenho uma dúvida sobre seus serviços.",
+        wa: "🤖 Olá! Tenho uma dúvida sobre seus serviços.",
         aria: "Abrir WhatsApp",
       },
     }),
