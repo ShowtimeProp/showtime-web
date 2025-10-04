@@ -67,6 +67,20 @@ export default function WhatsAppWidget({ locale }: Props) {
   const overrideBubble = (bubbleByLocale[locale] || overrideBubbleGlobal || "").trim();
   const overrideGreeting = (greetingByLocale[locale] || overrideGreetingGlobal || "").trim();
 
+  // Support for specifying emoji via Unicode escapes in env (e.g., \uD83E\uDD16)
+  function decodeUnicodeEscapes(input: string): string {
+    if (!input) return "";
+    try {
+      return input.replace(/\\u([0-9a-fA-F]{4})/g, (_, g1) => String.fromCharCode(parseInt(g1, 16)));
+    } catch {
+      return input;
+    }
+  }
+
+  // Trigger emoji configurable; defaults to robot 🤖
+  const triggerEmojiRaw = env.NEXT_PUBLIC_WA_TRIGGER_EMOJI || "🤖";
+  const triggerEmoji = decodeUnicodeEscapes(triggerEmojiRaw);
+
   const t = messages[locale] || messages.es;
 
   // Storage keys
@@ -162,7 +176,10 @@ export default function WhatsAppWidget({ locale }: Props) {
   }
 
   function waHref() {
-    const text = overrideGreeting || t.wa;
+    // Ensure the trigger emoji is present at the beginning, even if greeting comes from env
+    const base = decodeUnicodeEscapes(overrideGreeting) || t.wa;
+    const withEmoji = base.startsWith(triggerEmoji) ? base : `${triggerEmoji} ${base}`;
+    const text = withEmoji;
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   }
 

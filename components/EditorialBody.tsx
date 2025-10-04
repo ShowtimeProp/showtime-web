@@ -17,8 +17,8 @@ export default function EditorialBody({ value, locale = "es" as "es" | "en" | "p
 
   const components: PortableTextComponents = {
     block: {
-      h2: ({ children }) => <h2 className="mt-10 scroll-mt-24 text-2xl font-semibold tracking-tight">{children}</h2>,
-      h3: ({ children }) => <h3 className="mt-8 scroll-mt-24 text-xl font-semibold tracking-tight">{children}</h3>,
+      h2: ({ children }) => <h2 className="mt-10 scroll-mt-24 text-[1.6rem] sm:text-3xl font-extrabold tracking-tight">{children}</h2>,
+      h3: ({ children }) => <h3 className="mt-8 scroll-mt-24 text-[1.25rem] sm:text-2xl font-bold tracking-tight">{children}</h3>,
       normal: ({ children }) => <p className="leading-7 text-white/85">{children}</p>,
       blockquote: ({ children }) => (
         <blockquote className="my-6 border-l-4 border-white/20 pl-4 italic text-white/80">{children}</blockquote>
@@ -83,8 +83,30 @@ export default function EditorialBody({ value, locale = "es" as "es" | "en" | "p
   };
 
   return (
-    <div className="prose prose-invert max-w-none">
+    <div className="prose prose-invert max-w-none editorial">
       <PortableText value={value} components={components} />
+      <style jsx>{`
+        /* Drop cap and lead paragraph like blog */
+        .editorial :global(p:first-of-type) {
+          font-size: 1.05rem;
+          line-height: 1.9;
+          color: rgba(255,255,255,0.92);
+        }
+        .editorial :global(p:first-of-type)::first-letter {
+          float: left;
+          font-size: 3.1rem;
+          line-height: 1;
+          padding-right: 8px;
+          padding-top: 4px;
+          font-weight: 800;
+          color: #facc15; /* amber-400 accent similar to blog */
+        }
+        .editorial :global(ul) { margin-top: 1rem; margin-bottom: 1.25rem; }
+        .editorial :global(ol) { margin-top: 1rem; margin-bottom: 1.25rem; }
+        .editorial :global(li) { margin-bottom: 0.35rem; }
+        .editorial :global(hr) { border-color: rgba(255,255,255,0.08); margin: 2rem 0; }
+        .editorial :global(img) { box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+      `}</style>
     </div>
   );
 }
