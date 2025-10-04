@@ -49,8 +49,23 @@ export default function WhatsAppWidget({ locale }: Props) {
     []
   );
 
-  // Optional override via environment variable (same text across locales)
-  const overrideBubble = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_WA_BUBBLE_TEXT) || "";
+  // Optional overrides via environment variables
+  // Precedence: per-locale > global > default
+  const env = (typeof process !== 'undefined' && process.env) || {} as any;
+  const bubbleByLocale = {
+    es: env.NEXT_PUBLIC_WA_BUBBLE_TEXT_ES,
+    en: env.NEXT_PUBLIC_WA_BUBBLE_TEXT_EN,
+    pt: env.NEXT_PUBLIC_WA_BUBBLE_TEXT_PT,
+  } as Record<string, string | undefined>;
+  const greetingByLocale = {
+    es: env.NEXT_PUBLIC_WA_GREETING_ES,
+    en: env.NEXT_PUBLIC_WA_GREETING_EN,
+    pt: env.NEXT_PUBLIC_WA_GREETING_PT,
+  } as Record<string, string | undefined>;
+  const overrideBubbleGlobal = env.NEXT_PUBLIC_WA_BUBBLE_TEXT || "";
+  const overrideGreetingGlobal = env.NEXT_PUBLIC_WA_GREETING || "";
+  const overrideBubble = (bubbleByLocale[locale] || overrideBubbleGlobal || "").trim();
+  const overrideGreeting = (greetingByLocale[locale] || overrideGreetingGlobal || "").trim();
 
   const t = messages[locale] || messages.es;
 
@@ -147,7 +162,7 @@ export default function WhatsAppWidget({ locale }: Props) {
   }
 
   function waHref() {
-    const text = t.wa;
+    const text = overrideGreeting || t.wa;
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   }
 
@@ -217,8 +232,8 @@ export default function WhatsAppWidget({ locale }: Props) {
         .sonar-ring { position: absolute; inset: 0; border-radius: 9999px; pointer-events: none; }
         .wa-badge { position: absolute; top: -4px; right: -4px; width: 20px; height: 20px; background: #d32f2f; color: #fff; font-weight: 700; font-size: 12px; line-height: 20px; text-align: center; border-radius: 9999px; border: 2px solid #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         .chat-bubble { position: relative; background: #fff; color: #111827; border: 1px solid #e5e7eb; border-radius: 18px; padding: 10px 12px; max-width: 280px; box-shadow: 0 10px 24px rgba(0,0,0,0.18); cursor: pointer; z-index: 1001; }
-        /* Rotated-square tail (more robust across backgrounds) */
-        .chat-bubble::before { content: ""; position: absolute; right: -7px; bottom: 18px; width: 14px; height: 14px; background: #ffffff; transform: rotate(45deg); border-left: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; box-shadow: 0 6px 14px rgba(0,0,0,0.08); }
+        /* Rotated-square tail refined */
+        .chat-bubble::before { content: ""; position: absolute; right: -6px; bottom: 20px; width: 12px; height: 12px; background: #ffffff; transform: rotate(45deg); border-left: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; box-shadow: 0 3px 8px rgba(0,0,0,0.10); }
         .chat-label { font-weight: 700; font-size: 0.78rem; color: #111827; opacity: 0.75; margin-bottom: 2px; }
         .chat-text { font-size: 0.95rem; line-height: 1.25rem; }
         /* Simple fade+slide-in */
