@@ -80,13 +80,11 @@ export default function WhatsAppWidget({ locale }: Props) {
     // Only on devices that support hover (avoid on mobile)
     if (!(typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover)').matches)) return;
     if (showBubble) return;
-    if (!canShow()) return;
     if (timerRef.current) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
     }
     setShowBubble(true);
-    markShown();
     startAutoHide();
   }
 
@@ -150,17 +148,24 @@ export default function WhatsAppWidget({ locale }: Props) {
     return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   }
 
+  function handleBubbleClick() {
+    // Same behavior as clicking the icon, but avoid showing URL on hover
+    handleClick();
+    if (typeof window !== 'undefined') {
+      window.open(waHref(), '_blank', 'noopener,noreferrer');
+    }
+  }
+
   return (
     <div aria-live="polite" aria-atomic="true">
       {/* Floating button */}
-      <a
-        href={waHref()}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="button"
+        role="link"
         aria-label={t.aria}
         className="rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-green-400 relative overflow-visible"
         style={{ position: 'fixed', right: 28, left: 'auto', bottom: 56, zIndex: 1000, width: 56, height: 56, backgroundColor: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-        onClick={handleClick}
+        onClick={() => { handleClick(); if (typeof window !== 'undefined') window.open(waHref(), '_blank', 'noopener,noreferrer'); }}
         data-lead
         onMouseEnter={triggerBubbleNow}
       >
@@ -185,23 +190,13 @@ export default function WhatsAppWidget({ locale }: Props) {
             <path d="M26.07 5.93C23.34 3.2 19.82 1.71 16 1.71 8.76 1.71 2.99 7.48 2.99 14.71c0 2.27.59 4.49 1.72 6.45L2 30l9-2.65c1.88 1.02 4.01 1.56 6.22 1.56h.01c7.23 0 12.99-5.77 12.99-13.01 0-3.47-1.35-6.73-3.88-9.27zm-10.07 21.6h-.01c-1.97 0-3.9-.53-5.58-1.54l-.4-.24-5.34 1.57 1.59-5.2-.26-.42c-1.08-1.78-1.65-3.83-1.65-5.98C3.35 8.6 8.09 3.86 14 3.86c2.98 0 5.78 1.16 7.89 3.27 2.11 2.12 3.27 4.91 3.27 7.9 0 6.13-4.98 11.5-9.16 12.5z"/>
           </svg>
         )}
-      </a>
+      </button>
 
       {/* Chat-style bubble (no inner CTA) */}
       {ready && showBubble ? (
         <div className="fixed z-50 max-w-xs text-sm" style={{ right: 28, bottom: 128 }} role="dialog" aria-label="Bot message">
-          <a
-            href={waHref()}
-            target="_blank"
-            rel="noopener noreferrer"
-            data-lead
-            className="chat-bubble shadow-lg"
-            onClick={handleClick}
-          >
-            <div className="chat-meta">
-              <span className="chat-name">Showtime Bot</span>
-              <span className="chat-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            </div>
+          <div className="chat-bubble shadow-lg chat-enter" onClick={handleBubbleClick}>
+            <div className="chat-label">Showtime Bot</div>
             <div className="chat-text">{t.bubble}</div>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); closeBubble(); }}
@@ -210,7 +205,7 @@ export default function WhatsAppWidget({ locale }: Props) {
             >
               ×
             </button>
-          </a>
+          </div>
         </div>
       ) : null}
 
@@ -218,13 +213,15 @@ export default function WhatsAppWidget({ locale }: Props) {
       <style jsx>{`
         .sonar-ring { position: absolute; inset: 0; border-radius: 9999px; pointer-events: none; }
         .wa-badge { position: absolute; top: -4px; right: -4px; width: 20px; height: 20px; background: #d32f2f; color: #fff; font-weight: 700; font-size: 12px; line-height: 20px; text-align: center; border-radius: 9999px; border: 2px solid #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        .chat-bubble { position: relative; background: #fff; color: #111827; border: 1px solid #e5e7eb; border-radius: 18px; padding: 10px 12px; max-width: 280px; }
-        .chat-bubble::after { content: ""; position: absolute; right: -7px; bottom: 14px; width: 0; height: 0; border-left: 8px solid #fff; border-top: 8px solid transparent; border-bottom: 8px solid transparent; filter: drop-shadow(0 0 0 #e5e7eb); }
-        .chat-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-        .chat-name { font-weight: 700; font-size: 0.8rem; color: #111827; opacity: 0.9; }
-        .chat-time { font-size: 0.75rem; color: #6b7280; }
+        .chat-bubble { position: relative; background: #fff; color: #111827; border: 1px solid #e5e7eb; border-radius: 18px; padding: 10px 12px; max-width: 280px; box-shadow: 0 10px 24px rgba(0,0,0,0.18); cursor: pointer; z-index: 1001; }
+        /* Rotated-square tail (more robust across backgrounds) */
+        .chat-bubble::before { content: ""; position: absolute; right: -7px; bottom: 18px; width: 14px; height: 14px; background: #ffffff; transform: rotate(45deg); border-left: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; box-shadow: 0 6px 14px rgba(0,0,0,0.08); }
+        .chat-label { font-weight: 700; font-size: 0.78rem; color: #111827; opacity: 0.75; margin-bottom: 2px; }
         .chat-text { font-size: 0.95rem; line-height: 1.25rem; }
-        .chat-close { position: absolute; top: -8px; right: -8px; background: #111827; color: #fff; width: 20px; height: 20px; border-radius: 9999px; font-size: 12px; line-height: 18px; }
+        /* Simple fade+slide-in */
+        .chat-enter { animation: chatFade 180ms ease-out; transform-origin: 100% 100%; }
+        @keyframes chatFade { from { opacity: 0; transform: translateY(6px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .chat-close { position: absolute; top: -8px; right: -8px; background: #111827; color: #fff; width: 20px; height: 20px; border-radius: 9999px; font-size: 12px; line-height: 18px; z-index: 1002; }
         .sonar-ring::after { content: ""; position: absolute; inset: 0; border-radius: 9999px; border: 2px solid rgba(37,211,102,0.65); animation: sonar 10s ease-out infinite; }
         @keyframes sonar { 0% { transform: scale(1); opacity: 0; } 1% { opacity: 0.65; } 8% { transform: scale(1.9); opacity: 0; } 100% { transform: scale(1.9); opacity: 0; } }
       `}</style>
