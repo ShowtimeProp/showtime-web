@@ -21,7 +21,7 @@ export default function WhatsAppWidget({ locale }: Props) {
   const timerRef = useRef<number | null>(null);
 
   // Config
-  const DELAY_MS = 20000; // 20s
+  const DELAY_MS = 10000; // 10s
   const MIN_GAP_MS = 60 * 60 * 1000; // 1h
   const DAILY_MAX = 2; // twice per day
 
@@ -50,7 +50,7 @@ export default function WhatsAppWidget({ locale }: Props) {
   // Storage keys
   const dayKey = useMemo(() => `waBubble:count:${formatDateKey()}`, []);
   const lastShownKey = "waBubble:lastShown";
-  const unreadKey = "waBadge:unread";
+  const unreadKey = "waBadge:unreadUntil";
 
   // Decide if we can show the bubble now
   function canShow(): boolean {
@@ -63,6 +63,7 @@ export default function WhatsAppWidget({ locale }: Props) {
     } catch {
       return true;
     }
+  }
 
   function handleClick() {
     // Clear unread badge when user engages
@@ -71,24 +72,32 @@ export default function WhatsAppWidget({ locale }: Props) {
     } catch {}
     setUnread(false);
   }
-  }
 
   function markShown() {
     try {
       const count = parseInt(localStorage.getItem(dayKey) || "0", 10) || 0;
       localStorage.setItem(dayKey, String(Math.min(count + 1, DAILY_MAX)));
       localStorage.setItem(lastShownKey, String(Date.now()));
-      // Mark as unread so badge persists across visits until user clicks
-      localStorage.setItem(unreadKey, "1");
+      // Mark as unread so badge persists until user clicks or TTL expires (3h)
+      const threeHours = 3 * 60 * 60 * 1000;
+      localStorage.setItem(unreadKey, String(Date.now() + threeHours));
       setUnread(true);
     } catch {}
   }
 
   useEffect(() => {
     setReady(true);
-    // Restore unread badge state
+    // Restore unread badge state with TTL
     try {
-      if (localStorage.getItem(unreadKey)) setUnread(true);
+      const raw = localStorage.getItem(unreadKey);
+      if (raw) {
+        const until = parseInt(raw, 10) || 0;
+        if (until > Date.now()) {
+          setUnread(true);
+        } else {
+          localStorage.removeItem(unreadKey);
+        }
+      }
     } catch {}
     if (!canShow()) return;
     timerRef.current = window.setTimeout(() => {
@@ -121,7 +130,7 @@ export default function WhatsAppWidget({ locale }: Props) {
         rel="noopener noreferrer"
         aria-label={t.aria}
         className="rounded-full shadow-lg focus:outline-none focus:ring-2 focus:ring-green-400 relative overflow-visible"
-        style={{ position: 'fixed', right: 20, left: 'auto', bottom: 20, zIndex: 1000, width: 56, height: 56, backgroundColor: "#25D366", display: "flex", alignItems: "center", justifyContent: "center", border: '4px solid #fff' }}
+        style={{ position: 'fixed', right: 28, left: 'auto', bottom: 56, zIndex: 1000, width: 56, height: 56, backgroundColor: "#25D366", display: "flex", alignItems: "center", justifyContent: "center" }}
         onClick={handleClick}
         data-lead
       >
@@ -141,7 +150,7 @@ export default function WhatsAppWidget({ locale }: Props) {
 
       {/* Bubble prompt */}
       {ready && showBubble ? (
-        <div className="fixed z-50 right-5 bottom-[78px] max-w-xs text-sm" role="dialog" aria-label="WhatsApp prompt">
+        <div className="fixed z-50 max-w-xs text-sm" style={{ right: 28, bottom: 128 }} role="dialog" aria-label="WhatsApp prompt">
           <div className="bg-white text-gray-900 rounded-2xl shadow-lg border border-gray-200 p-3 relative">
             <button
               onClick={closeBubble}
