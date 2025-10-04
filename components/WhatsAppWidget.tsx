@@ -31,23 +31,26 @@ export default function WhatsAppWidget({ locale }: Props) {
   const messages = useMemo(
     () => ({
       es: {
-        bubble: "👋 ¿En qué podemos ayudarte hoy?",
-        wa: "🤖 Hola! Tengo una consulta sobre sus servicios.",
+        bubble: "👋 ¿Cómo podemos ayudarte hoy?",
+        wa: "Hola! Tengo una consulta sobre sus servicios.",
         aria: "Abrir WhatsApp",
       },
       en: {
         bubble: "👋 How can we help you today?",
-        wa: "🤖 Hi! I have a question about your services.",
+        wa: "Hi! I have a question about your services.",
         aria: "Open WhatsApp",
       },
       pt: {
         bubble: "👋 Como podemos te ajudar hoje?",
-        wa: "🤖 Olá! Tenho uma dúvida sobre seus serviços.",
+        wa: "Olá! Tenho uma dúvida sobre seus serviços.",
         aria: "Abrir WhatsApp",
       },
     }),
     []
   );
+
+  // Optional override via environment variable (same text across locales)
+  const overrideBubble = (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_WA_BUBBLE_TEXT) || "";
 
   const t = messages[locale] || messages.es;
 
@@ -197,7 +200,7 @@ export default function WhatsAppWidget({ locale }: Props) {
         <div className="fixed z-50 max-w-xs text-sm" style={{ right: 28, bottom: 128 }} role="dialog" aria-label="Bot message">
           <div className="chat-bubble shadow-lg chat-enter" onClick={handleBubbleClick}>
             <div className="chat-label">Showtime Bot</div>
-            <div className="chat-text">{t.bubble}</div>
+            <div className="chat-text">{overrideBubble || t.bubble}</div>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); closeBubble(); }}
               aria-label="Cerrar"
