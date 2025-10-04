@@ -1,5 +1,5 @@
 import { sanityClient } from "@/lib/sanity/client";
-import { PortableText } from "@portabletext/react";
+import EditorialBody from "@/components/EditorialBody";
 import { buildAlternatesFor, canonical, jsonLdService, toLdJson } from "@/lib/seo";
 import { fetchSiteMeta } from "@/lib/site";
 import Image from "next/image";
@@ -43,12 +43,14 @@ export async function generateMetadata({ params }: Params) {
   return {
     title,
     description,
-    alternates: buildAlternatesFor({
-      es: `/es/servicios/${params.slug}`,
-      pt: `/pt/servicos/${params.slug}`,
-      en: `/en/services/${params.slug}`,
-    }),
-    alternatesCanonical: canonical(`/${params.locale}/services/${params.slug}`),
+    alternates: {
+      ...buildAlternatesFor({
+        es: `/es/servicios/${params.slug}`,
+        pt: `/pt/servicos/${params.slug}`,
+        en: `/en/services/${params.slug}`,
+      }),
+      canonical: canonical(`/${params.locale}/services/${params.slug}`),
+    },
     metadataBase: new URL(base),
     openGraph: {
       title,
@@ -145,17 +147,7 @@ export default async function ServiceDetail({ params }: Params) {
         </div>
       ) : null}
       {Array.isArray(data.body) && data.body.length ? (
-        <div className="prose prose-invert max-w-none">
-          <PortableText
-            value={data.body}
-            components={{
-              block: {
-                h2: ({ children }) => <h2 className="mt-8">{children}</h2>,
-                h3: ({ children }) => <h3 className="mt-6">{children}</h3>,
-              },
-            }}
-          />
-        </div>
+        <EditorialBody value={data.body} locale={params.locale as 'es' | 'en' | 'pt'} />
       ) : null}
 
       {/* CTA Footer */}

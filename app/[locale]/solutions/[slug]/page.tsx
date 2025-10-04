@@ -1,5 +1,6 @@
 import { sanityClient } from "@/lib/sanity/client";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import EditorialBody from "@/components/EditorialBody";
 import Image from "next/image";
 import { imgPresets } from "@/lib/sanity/image";
 
@@ -91,12 +92,8 @@ export default async function SolutionDetailPage({ params }: { params: { locale:
         </div>
       ) : null}
 
-      {Array.isArray(data.body) ? (
-        <div className="prose prose-invert max-w-none">
-          {data.body.map((block: any, i: number) => (
-            <p key={i}>{block?.children?.map((c: any) => c.text).join('')}</p>
-          ))}
-        </div>
+      {Array.isArray(data.body) && data.body.length ? (
+        <EditorialBody value={data.body} locale={params.locale as 'es' | 'en' | 'pt'} />
       ) : null}
 
       {/* CTA Footer */}
