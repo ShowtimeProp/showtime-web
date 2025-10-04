@@ -19,6 +19,7 @@ export default function WhatsAppWidget({ locale }: Props) {
   const [unread, setUnread] = useState(false);
   const [imgOk, setImgOk] = useState(true);
   const timerRef = useRef<number | null>(null);
+  const autoHideRef = useRef<number | null>(null);
 
   // Config
   const DELAY_MS = 10000; // 10s
@@ -74,6 +75,21 @@ export default function WhatsAppWidget({ locale }: Props) {
     setUnread(false);
   }
 
+  // Show bubble immediately (e.g., on hover) respecting frequency limits
+  function triggerBubbleNow() {
+    // Only on devices that support hover (avoid on mobile)
+    if (!(typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(hover: hover)').matches)) return;
+    if (showBubble) return;
+    if (!canShow()) return;
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    setShowBubble(true);
+    markShown();
+    startAutoHide();
+  }
+
   function markShown() {
     try {
       const count = parseInt(localStorage.getItem(dayKey) || "0", 10) || 0;
@@ -84,6 +100,18 @@ export default function WhatsAppWidget({ locale }: Props) {
       localStorage.setItem(unreadKey, String(Date.now() + threeHours));
       setUnread(true);
     } catch {}
+  }
+
+  // Start/Reset auto-hide countdown (12s)
+  function startAutoHide() {
+    if (autoHideRef.current) {
+      window.clearTimeout(autoHideRef.current);
+      autoHideRef.current = null;
+    }
+    autoHideRef.current = window.setTimeout(() => {
+      setShowBubble(false);
+      autoHideRef.current = null;
+    }, 12000) as unknown as number;
   }
 
   useEffect(() => {
@@ -104,12 +132,17 @@ export default function WhatsAppWidget({ locale }: Props) {
     }, DELAY_MS) as unknown as number;
     return () => {
       if (timerRef.current) window.clearTimeout(timerRef.current);
+      if (autoHideRef.current) window.clearTimeout(autoHideRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dayKey]);
 
   function closeBubble() {
     setShowBubble(false);
+    if (autoHideRef.current) {
+      window.clearTimeout(autoHideRef.current);
+      autoHideRef.current = null;
+    }
   }
 
   function waHref() {
@@ -129,12 +162,13 @@ export default function WhatsAppWidget({ locale }: Props) {
         style={{ position: 'fixed', right: 28, left: 'auto', bottom: 56, zIndex: 1000, width: 56, height: 56, backgroundColor: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         onClick={handleClick}
         data-lead
+        onMouseEnter={triggerBubbleNow}
       >
         <span className="sonar-ring" aria-hidden="true" />
         {showBubble || unread ? <span className="wa-badge" aria-hidden="true">1</span> : null}
         {imgOk ? (
           <img
-            src={showBubble || unread ? "/wa-badge.png" : "/wa.png"}
+            src={showBubble || unread ? "/wa-badge-bot.png" : "/wa.png"}
             alt="WhatsApp"
             width={48}
             height={48}
@@ -156,14 +190,27 @@ export default function WhatsAppWidget({ locale }: Props) {
       {/* Chat-style bubble (no inner CTA) */}
       {ready && showBubble ? (
         <div className="fixed z-50 max-w-xs text-sm" style={{ right: 28, bottom: 128 }} role="dialog" aria-label="Bot message">
-          <div className="chat-bubble shadow-lg">
+          <a
+            href={waHref()}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-lead
+            className="chat-bubble shadow-lg"
+            onClick={handleClick}
+          >
             <div className="chat-meta">
               <span className="chat-name">Showtime Bot</span>
               <span className="chat-time">{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
             </div>
             <div className="chat-text">{t.bubble}</div>
-            <button onClick={closeBubble} aria-label="Cerrar" className="chat-close">×</button>
-          </div>
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); closeBubble(); }}
+              aria-label="Cerrar"
+              className="chat-close"
+            >
+              ×
+            </button>
+          </a>
         </div>
       ) : null}
 
