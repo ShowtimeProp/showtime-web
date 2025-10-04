@@ -140,7 +140,7 @@ export default function WhatsAppWidget({ locale }: Props) {
         {showBubble || unread ? <span className="wa-badge" aria-hidden="true">1</span> : null}
         {imgOk ? (
           <img
-            src={showBubble || unread ? "/whatsapp-badge.png" : "/whatsapp.png"}
+            src={showBubble || unread ? "/wa-badge.png" : "/wa.png"}
             alt="WhatsApp"
             width={48}
             height={48}
