@@ -3,7 +3,9 @@ import { PortableText, type PortableTextComponents } from "@portabletext/react";
 import Image from "next/image";
 import { urlFor } from "@/lib/sanity/image";
 
-export default function EditorialBody({ value, locale = "es" as "es" | "en" | "pt" }: { value: any; locale?: "es" | "en" | "pt" }) {
+type DropcapMode = 'first' | 'sections' | 'all';
+
+export default function EditorialBody({ value, locale = "es" as "es" | "en" | "pt", dropcapMode = 'first' as DropcapMode }: { value: any; locale?: "es" | "en" | "pt"; dropcapMode?: DropcapMode }) {
   if (!Array.isArray(value) || value.length === 0) return null;
 
   const t = (k: string) => {
@@ -83,16 +85,17 @@ export default function EditorialBody({ value, locale = "es" as "es" | "en" | "p
   };
 
   return (
-    <div className="prose prose-invert max-w-none editorial">
+    <div className={`prose prose-invert max-w-none editorial editorial-dropcap-${dropcapMode}`}>
       <PortableText value={value} components={components} />
       <style jsx>{`
-        /* Drop cap and lead paragraph like blog */
+        /* Lead paragraph like blog */
         .editorial :global(p:first-of-type) {
           font-size: 1.05rem;
           line-height: 1.9;
           color: rgba(255,255,255,0.92);
         }
-        .editorial :global(p:first-of-type)::first-letter {
+        /* Dropcap: first paragraph */
+        .editorial.editorial-dropcap-first :global(p:first-of-type)::first-letter {
           float: left;
           font-size: 3.1rem;
           line-height: 1;
@@ -100,6 +103,28 @@ export default function EditorialBody({ value, locale = "es" as "es" | "en" | "p
           padding-top: 4px;
           font-weight: 800;
           color: #facc15; /* amber-400 accent similar to blog */
+        }
+        /* Dropcap: every section start (after h2/h3) */
+        .editorial.editorial-dropcap-sections :global(h2 + p)::first-letter,
+        .editorial.editorial-dropcap-sections :global(h3 + p)::first-letter,
+        .editorial.editorial-dropcap-sections :global(p:first-of-type)::first-letter {
+          float: left;
+          font-size: 3.1rem;
+          line-height: 1;
+          padding-right: 8px;
+          padding-top: 4px;
+          font-weight: 800;
+          color: #facc15;
+        }
+        /* Dropcap: all paragraphs (may be heavy visually) */
+        .editorial.editorial-dropcap-all :global(p)::first-letter {
+          float: left;
+          font-size: 3.1rem;
+          line-height: 1;
+          padding-right: 8px;
+          padding-top: 4px;
+          font-weight: 800;
+          color: #facc15;
         }
         .editorial :global(ul) { margin-top: 1rem; margin-bottom: 1.25rem; }
         .editorial :global(ol) { margin-top: 1rem; margin-bottom: 1.25rem; }

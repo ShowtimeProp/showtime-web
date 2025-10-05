@@ -93,7 +93,7 @@ export default async function SolutionDetailPage({ params }: { params: { locale:
       ) : null}
 
       {Array.isArray(data.body) && data.body.length ? (
-        <EditorialBody value={data.body} locale={params.locale as 'es' | 'en' | 'pt'} />
+        <EditorialBody value={data.body} locale={params.locale as 'es' | 'en' | 'pt'} dropcapMode="sections" />
       ) : null}
 
       {/* CTA Footer */}
