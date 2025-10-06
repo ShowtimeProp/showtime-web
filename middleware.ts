@@ -18,7 +18,9 @@ export function middleware(req: NextRequest) {
 
   // Ignore next internals, files and API
   if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.includes('.')) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.headers.set('x-mw', 'skip');
+    return res;
   }
 
   // Bypass locale redirect for Studio and add X-Robots-Tag to avoid indexing
@@ -58,7 +60,9 @@ export function middleware(req: NextRequest) {
   // Always send to '/<locale>' and drop queries like add-to-cart
   url.search = '';
   url.pathname = `/${locale}`;
-  return NextResponse.redirect(url, 301);
+  const redir = NextResponse.redirect(url, 301);
+  redir.headers.set('x-mw', 'redir-root');
+  return redir;
 }
 
 export const config = {
