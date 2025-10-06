@@ -52,24 +52,12 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Redirect root or non-prefixed paths to detected locale
+  // Redirect ANY non-prefixed path strictly to detected locale root
   const locale = detectLocale(req);
   const url = req.nextUrl.clone();
-  // If path includes legacy add-to-cart, drop it
-  if (url.searchParams.has('add-to-cart')) {
-    url.search = '';
-    url.pathname = `/${locale}`;
-    return NextResponse.redirect(url, 301);
-  }
-  // Keep allowed sections only, otherwise send to root
-  const parts = pathname.split('/').filter(Boolean);
-  const first = parts[0] || '';
-  const allowed = new Set(['', 'services', 'solutions', 'portfolio', 'project', 'blog', 'contact']);
-  if (!first || !allowed.has(first)) {
-    url.pathname = `/${locale}`;
-  } else {
-    url.pathname = `/${locale}${pathname === '/' ? '' : pathname}`;
-  }
+  // Always send to '/<locale>' and drop queries like add-to-cart
+  url.search = '';
+  url.pathname = `/${locale}`;
   return NextResponse.redirect(url, 301);
 }
 
