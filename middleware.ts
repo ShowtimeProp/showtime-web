@@ -21,6 +21,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Bypass locale redirect for Studio and add X-Robots-Tag to avoid indexing
+  if (pathname === '/studio' || pathname.startsWith('/studio/')) {
+    const res = NextResponse.next();
+    res.headers.set('X-Robots-Tag', 'noindex, nofollow');
+    return res;
+  }
+
   // Allow if already prefixed with a supported locale
   if (/^\/(es|pt|en)(\/|$)/.test(pathname)) {
     return NextResponse.next();
