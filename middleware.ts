@@ -28,16 +28,49 @@ export function middleware(req: NextRequest) {
     return res;
   }
 
-  // Allow if already prefixed with a supported locale
-  if (/^\/(es|pt|en)(\/|$)/.test(pathname)) {
+  // If already prefixed with a supported locale, normalize unknown sections
+  const localePrefixed = pathname.match(/^\/(es|pt|en)(?:\/(.*))?$/);
+  if (localePrefixed) {
+    const currentLocale = localePrefixed[1];
+    const rest = (localePrefixed[2] || '').split('/').filter(Boolean);
+    const first = rest[0] || '';
+    const allowed = new Set(['', 'services', 'solutions', 'portfolio', 'project', 'blog', 'contact']);
+    const url = req.nextUrl.clone();
+
+    // Strip legacy Woo query like add-to-cart
+    if (url.searchParams.has('add-to-cart')) {
+      url.search = '';
+      url.pathname = `/${currentLocale}`;
+      return NextResponse.redirect(url, 301);
+    }
+
+    if (!allowed.has(first)) {
+      url.search = '';
+      url.pathname = `/${currentLocale}`;
+      return NextResponse.redirect(url, 301);
+    }
     return NextResponse.next();
   }
 
   // Redirect root or non-prefixed paths to detected locale
   const locale = detectLocale(req);
   const url = req.nextUrl.clone();
-  url.pathname = `/${locale}${pathname === '/' ? '' : pathname}`;
-  return NextResponse.redirect(url);
+  // If path includes legacy add-to-cart, drop it
+  if (url.searchParams.has('add-to-cart')) {
+    url.search = '';
+    url.pathname = `/${locale}`;
+    return NextResponse.redirect(url, 301);
+  }
+  // Keep allowed sections only, otherwise send to root
+  const parts = pathname.split('/').filter(Boolean);
+  const first = parts[0] || '';
+  const allowed = new Set(['', 'services', 'solutions', 'portfolio', 'project', 'blog', 'contact']);
+  if (!first || !allowed.has(first)) {
+    url.pathname = `/${locale}`;
+  } else {
+    url.pathname = `/${locale}${pathname === '/' ? '' : pathname}`;
+  }
+  return NextResponse.redirect(url, 301);
 }
 
 export const config = {
