@@ -23,6 +23,7 @@ export default async function SiteHeader({ locale, basePath = "" }: { locale?: s
   }
 
   const title = (locale && data?.siteTitleLoc?.[locale]) || data?.siteTitleLoc?.es || data?.siteTitle || "Showtime Prop";
+  const tooltip = (locale && data?.descriptionLoc?.[locale]) || data?.descriptionLoc?.es || data?.description || "";
   const nav = (data?.navigation || [
     { label: "Soluciones", href: "/solutions" },
     { label: "Servicios", href: "/services" },
@@ -76,14 +77,24 @@ export default async function SiteHeader({ locale, basePath = "" }: { locale?: s
   });
 
   const logoUrl = data?.logo ? urlFor(data.logo).width(28).height(28).url() : null;
+  const isHome = basePath === `/${locale || 'es'}`;
+  const displayTitle = isHome ? 'Showtime Prop' : title;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[9999] pointer-events-auto flex items-center justify-between px-6 py-4 border-b bg-[rgba(11,10,16,0.6)] backdrop-blur-md w-full">
-      <Link href={basePath || "/"} aria-label="Go to home" className="brand-link flex items-center gap-2">
+      <Link href={basePath || "/"} aria-label="Go to home" title={tooltip} className="brand-link group relative flex items-center gap-2">
         {logoUrl ? (
           <Image src={logoUrl} alt="" aria-hidden width={28} height={28} className="brand-logo rounded" />
         ) : null}
-        <span className="brand-title font-semibold">{title}</span>
+        <span className="brand-title font-semibold">{displayTitle}</span>
+        {tooltip ? (
+          <span
+            role="tooltip"
+            className="pointer-events-none absolute left-0 top-full mt-2 hidden whitespace-nowrap rounded-md bg-black/80 px-2 py-1 text-xs text-white shadow-lg group-hover:block"
+          >
+            {tooltip}
+          </span>
+        ) : null}
       </Link>
       <div className="flex items-center gap-4 text-sm">
         {/* Desktop nav */}
