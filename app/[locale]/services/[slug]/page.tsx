@@ -1,6 +1,6 @@
 import { sanityClient } from "@/lib/sanity/client";
 import EditorialBody from "@/components/EditorialBody";
-import { buildAlternatesFor, canonical, jsonLdService, toLdJson } from "@/lib/seo";
+import { buildAlternatesFor, canonical, jsonLdService, toLdJson, renderPattern } from "@/lib/seo";
 import { fetchSiteMeta } from "@/lib/site";
 import Image from "next/image";
 import { urlFor, imgPresets } from "@/lib/sanity/image";
@@ -36,13 +36,18 @@ const query = `*[_type == "service" && slug.current == $slug][0]{
 
 export async function generateMetadata({ params }: Params) {
   const data = await sanityClient.fetch(query, { slug: params.slug, locale: params.locale }).catch(() => null);
-  const { title: siteTitle, description: siteDesc, image: siteImg, base } = await fetchSiteMeta(params.locale);
-  const title = data?.title ? `${data.title} | ${siteTitle}` : `Servicio | ${siteTitle}`;
-  const description = data?.short || siteDesc || "Detalle del servicio";
+  const { seoPatterns, brandShort, description: siteDesc, image: siteImg, base } = await fetchSiteMeta(params.locale);
+  const brand = brandShort || 'Showtime Prop';
+  const patTitle = seoPatterns?.titleServiceLoc?.[params.locale] || (params.locale === 'pt' ? '[ServiceTitle] | [Brand]' : params.locale === 'en' ? '[ServiceTitle] | [Brand]' : '[ServiceTitle] | [Brand]');
+  const patDesc = seoPatterns?.descServiceLoc?.[params.locale] || (params.locale === 'pt' ? '[ServiceTitle]. Benefício principal.' : params.locale === 'en' ? '[ServiceTitle]. Key benefit.' : '[ServiceTitle]. Beneficio principal.');
+  const serviceTitle = data?.title || (params.locale === 'pt' ? 'Serviço' : params.locale === 'en' ? 'Service' : 'Servicio');
+  const t = renderPattern(patTitle, { Brand: brand, ServiceTitle: serviceTitle }, { title: 60 }).title;
+  const baseDesc = data?.short || siteDesc || '';
+  const d = data?.short ? renderPattern(patDesc, { ServiceTitle: serviceTitle }, { description: 155 }).description : renderPattern(patDesc, { ServiceTitle: serviceTitle }, { description: 155 }).description || baseDesc;
   const ogImage = data?.icon ? urlFor(data.icon).width(1200).height(630).url() : siteImg;
   return {
-    title,
-    description,
+    title: t,
+    description: d,
     alternates: {
       ...buildAlternatesFor({
         es: `/es/servicios/${params.slug}`,
@@ -53,16 +58,16 @@ export async function generateMetadata({ params }: Params) {
     },
     metadataBase: new URL(base),
     openGraph: {
-      title,
-      description,
+      title: t,
+      description: d,
       type: 'article',
       url: `${base}/${params.locale}/servicios/${params.slug}`,
-      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: title }] : undefined,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: t }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
+      title: t,
+      description: d,
       images: ogImage ? [ogImage] : undefined,
     },
   } as any;

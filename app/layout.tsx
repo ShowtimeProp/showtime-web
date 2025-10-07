@@ -23,6 +23,12 @@ export const metadata: Metadata = {
     "Servicios de marketing inmobiliario: fotografía profesional, tours virtuales, video 360, edición, planos Unreal Engine e IA con n8n.",
   metadataBase: new URL(getBaseUrl()),
   alternates: buildAlternates("/"),
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-icon.png",
+  },
+  manifest: "/manifest.json",
   openGraph: {
     type: "website",
     title: "Showtime Prop — Real Estate Marketing",

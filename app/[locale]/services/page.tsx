@@ -2,6 +2,8 @@ import { sanityClient } from "@/lib/sanity/client";
 import Packs from "@/components/Packs";
 import ServicesIndexClient from "@/components/ServicesIndexClient";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { fetchSiteMeta } from "@/lib/site";
+import { buildAlternates, renderPattern } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -19,6 +21,22 @@ const servicesQuery = `*[_type == "service"] | order(coalesce(order, 999) asc, t
   icon,
   "slug": slug.current
 }`;
+
+export async function generateMetadata({ params }: { params: { locale: string } }) {
+  const { seoPatterns, brandShort, base } = await fetchSiteMeta(params.locale);
+  const brand = brandShort || 'Showtime Prop';
+  const patTitle = seoPatterns?.titleServicesLoc?.[params.locale] || (params.locale === 'pt' ? 'Serviços de [Brand] | Marketing Imobiliário 360' : params.locale === 'en' ? 'Services by [Brand] | Real Estate Marketing 360' : 'Servicios de [Brand] | Marketing Inmobiliario 360');
+  const patDesc = seoPatterns?.descServicesLoc?.[params.locale] || (params.locale === 'pt' ? 'Foto HDR, tours 360, vídeo e IA. Mais visitas qualificadas e vendas.' : params.locale === 'en' ? 'HDR photos, 360 tours, video and AI. More qualified visits and sales.' : 'Foto HDR, tours 360, video e IA. Más visitas cualificadas y ventas.');
+  const t = renderPattern(patTitle, { Brand: brand }, { title: 60 }).title;
+  const d = renderPattern(patDesc, { Brand: brand }, { description: 155 }).description;
+  return {
+    title: t,
+    description: d,
+    alternates: buildAlternates(`/${params.locale}/services`),
+    openGraph: { title: t, description: d, type: 'website', url: `${base}/${params.locale}/services` },
+    twitter: { card: 'summary', title: t, description: d },
+  } as any;
+}
 
 export default async function ServicesPage({ params }: { params: { locale: string } }) {
   const basePath = `/${params.locale}`;
