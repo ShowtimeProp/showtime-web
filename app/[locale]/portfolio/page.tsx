@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { sanityClient } from "@/lib/sanity/client";
 import { urlFor, imgPresets } from "@/lib/sanity/image";
-import { buildAlternatesFor } from "@/lib/seo";
+import { buildAlternatesFor, renderPattern } from "@/lib/seo";
 import { fetchSiteMeta } from "@/lib/site";
 import SpotCard from "@/components/SpotCard";
 import HaloFrame from "@/components/HaloFrame";
@@ -153,8 +153,12 @@ export default async function PortfolioPage({ params }: { params: { locale: stri
 }
 
 export async function generateMetadata({ params }: { params: { locale: string } }) {
-  const { title, description, image, base } = await fetchSiteMeta(params.locale);
-  const pageTitle = `${title} | Portfolio`;
+  const { seoPatterns, brandShort, image, base } = await fetchSiteMeta(params.locale);
+  const brand = brandShort || 'Showtime Prop';
+  const patTitle = seoPatterns?.titlePortfolioLoc?.[params.locale] || (params.locale === 'pt' ? 'Portfolio | Projetos de [Brand]' : params.locale === 'en' ? 'Portfolio | Projects by [Brand]' : 'Portafolio | Proyectos de [Brand]');
+  const patDesc = seoPatterns?.descPortfolioLoc?.[params.locale] || (params.locale === 'pt' ? 'Casos reais e resultados mensuráveis.' : params.locale === 'en' ? 'Real cases and measurable results.' : 'Casos reales y resultados medibles.');
+  const pageTitle = renderPattern(patTitle, { Brand: brand }, { title: 60 }).title;
+  const description = renderPattern(patDesc, { Brand: brand }, { description: 155 }).description;
   return {
     title: pageTitle,
     description,

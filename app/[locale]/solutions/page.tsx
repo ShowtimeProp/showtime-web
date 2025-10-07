@@ -1,6 +1,8 @@
 import { sanityClient } from "@/lib/sanity/client";
 import ServicesIndexClient from "@/components/ServicesIndexClient";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { fetchSiteMeta } from "@/lib/site";
+import { buildAlternates, renderPattern } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -18,6 +20,22 @@ const query = `*[_type == "solution"] | order(coalesce(order, 999) asc, title as
   icon,
   "slug": slug.current
 }`;
+
+export async function generateMetadata({ params }: { params: { locale: string } }) {
+  const { seoPatterns, brandShort, base } = await fetchSiteMeta(params.locale);
+  const brand = brandShort || 'Showtime Prop';
+  const patTitle = seoPatterns?.titleSolutionsLoc?.[params.locale] || (params.locale === 'pt' ? 'Soluções para Imobiliárias | [Brand]' : params.locale === 'en' ? 'Solutions for Real Estate | [Brand]' : 'Soluciones para Inmobiliarias | [Brand]');
+  const patDesc = seoPatterns?.descSolutionsLoc?.[params.locale] || (params.locale === 'pt' ? 'IA + conteúdo 360 para captar e converter.' : params.locale === 'en' ? 'AI + 360 content to capture and convert.' : 'IA + contenido 360 para captar y convertir.');
+  const t = renderPattern(patTitle, { Brand: brand }, { title: 60 }).title;
+  const d = renderPattern(patDesc, { Brand: brand }, { description: 155 }).description;
+  return {
+    title: t,
+    description: d,
+    alternates: buildAlternates(`/${params.locale}/solutions`),
+    openGraph: { title: t, description: d, type: 'website', url: `${base}/${params.locale}/solutions` },
+    twitter: { card: 'summary', title: t, description: d },
+  } as any;
+}
 
 export default async function SolutionsPage({ params }: { params: { locale: string } }) {
   const basePath = `/${params.locale}`;

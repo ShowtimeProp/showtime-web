@@ -5,6 +5,7 @@ import { fetchSiteMeta } from "@/lib/site";
 import { urlFor, imgPresets } from "@/lib/sanity/image";
 import Image from "next/image";
 import BackToTopFab from "@/components/BackToTopFab";
+import { renderPattern } from "@/lib/seo";
 
 export const revalidate = 60;
 
@@ -291,25 +292,29 @@ export default async function BlogDetailPage({ params }: { params: { locale: str
 
 export async function generateMetadata({ params }: { params: { locale: string; slug: string } }) {
   const data = await sanityClient.fetch(query, { slug: params.slug, locale: params.locale }).catch(() => null);
-  const { title: siteTitle, description: siteDesc, image: siteImg, base } = await fetchSiteMeta(params.locale);
-  const title = data?.title ? `${data.title} | ${siteTitle}` : `Blog | ${siteTitle}`;
-  const description = data?.short || siteDesc || "Post";
+  const { seoPatterns, brandShort, image: siteImg, base } = await fetchSiteMeta(params.locale);
+  const brand = brandShort || 'Showtime Prop';
+  const patTitle = seoPatterns?.titlePostLoc?.[params.locale] || (params.locale === 'pt' ? '[PostTitle] | [Brand]' : params.locale === 'en' ? '[PostTitle] | [Brand]' : '[PostTitle] | [Brand]');
+  const patDesc = seoPatterns?.descPostLoc?.[params.locale] || (params.locale === 'pt' ? 'Resumo do artigo em uma frase.' : params.locale === 'en' ? 'One-line summary of the article.' : 'Resumen del artículo en una frase.');
+  const postTitle = data?.title || (params.locale === 'pt' ? 'Artigo' : params.locale === 'en' ? 'Post' : 'Nota');
+  const t = renderPattern(patTitle, { Brand: brand, PostTitle: postTitle }, { title: 60 }).title;
+  const d = renderPattern(patDesc, { PostTitle: postTitle }, { description: 155 }).description;
   const ogImage = data?.mainImage ? urlFor(data.mainImage).width(1200).height(630).url() : siteImg;
   return {
-    title,
-    description,
+    title: t,
+    description: d,
     metadataBase: new URL(base),
     openGraph: {
-      title,
-      description,
+      title: t,
+      description: d,
       type: 'article',
       url: `${base}/${params.locale}/blog/${params.slug}`,
-      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: title }] : undefined,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: t }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
+      title: t,
+      description: d,
       images: ogImage ? [ogImage] : undefined,
     },
   } as any;

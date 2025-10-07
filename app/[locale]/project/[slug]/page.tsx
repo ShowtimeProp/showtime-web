@@ -4,7 +4,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import { sanityClient } from "@/lib/sanity/client";
 import { urlFor } from "@/lib/sanity/image";
 import { PortableText } from "@portabletext/react";
-import { buildAlternatesFor } from "@/lib/seo";
+import { buildAlternatesFor, canonical, jsonLdBreadcrumb, jsonLdCreativeWork, toLdJson, renderPattern } from "@/lib/seo";
 import { fetchSiteMeta } from "@/lib/site";
 import SpotCard from "@/components/SpotCard";
 import { imgPresets } from "@/lib/sanity/image";
@@ -45,32 +45,39 @@ const relatedQuery = `
 
 export async function generateMetadata({ params }: Params) {
   const data = await sanityClient.fetch(query, { slug: params.slug, locale: params.locale }).catch(() => null);
-  const { title: siteTitle, description: siteDesc, image: siteImg, base } = await fetchSiteMeta(params.locale);
-  const title = data?.title ? `${data.title} | ${siteTitle}` : `Proyecto | ${siteTitle}`;
-  const description = data?.tags?.join(" / ") || siteDesc || "Detalle del proyecto";
+  const { seoPatterns, brandShort, image: siteImg, base } = await fetchSiteMeta(params.locale);
+  const brand = brandShort || 'Showtime Prop';
+  const patTitle = seoPatterns?.titleProjectLoc?.[params.locale] || (params.locale === 'pt' ? '[ProjectTitle] | Portfólio de [Brand]' : params.locale === 'en' ? '[ProjectTitle] | Portfolio of [Brand]' : '[ProjectTitle] | Portafolio de [Brand]');
+  const patDesc = seoPatterns?.descProjectLoc?.[params.locale] || (params.locale === 'pt' ? '[ProjectTitle]. Resultado e formatos.' : params.locale === 'en' ? '[ProjectTitle]. Results and formats.' : '[ProjectTitle]. Resultado y formatos.');
+  const projectTitle = data?.title || (params.locale === 'pt' ? 'Projeto' : params.locale === 'en' ? 'Project' : 'Proyecto');
+  const t = renderPattern(patTitle, { Brand: brand, ProjectTitle: projectTitle }, { title: 60 }).title;
+  const d = renderPattern(patDesc, { ProjectTitle: projectTitle }, { description: 155 }).description;
   const cover = data?.thumb ? urlFor(data.thumb).width(1200).height(630).fit("crop").url() : null;
   const firstGallery = Array.isArray(data?.gallery) && data.gallery.length ? urlFor(data.gallery[0]).width(1200).height(630).fit("crop").url() : null;
   const ogImage = cover || firstGallery || siteImg;
   return {
-    title,
-    description,
-    alternates: buildAlternatesFor({
-      es: `/es/proyecto/${params.slug}`,
-      pt: `/pt/projeto/${params.slug}`,
-      en: `/en/project/${params.slug}`,
-    }),
+    title: t,
+    description: d,
+    alternates: {
+      ...buildAlternatesFor({
+        es: `/es/proyecto/${params.slug}`,
+        pt: `/pt/projeto/${params.slug}`,
+        en: `/en/project/${params.slug}`,
+      }),
+      canonical: canonical(`/${params.locale}/project/${params.slug}`),
+    },
     metadataBase: new URL(base),
     openGraph: {
-      title,
-      description,
+      title: t,
+      description: d,
       type: 'article',
       url: `${base}/${params.locale}/proyecto/${params.slug}`,
-      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: title }] : undefined,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: t }] : undefined,
     },
     twitter: {
       card: 'summary_large_image',
-      title,
-      description,
+      title: t,
+      description: d,
       images: ogImage ? [ogImage] : undefined,
     },
   } as any;
@@ -136,6 +143,33 @@ export default async function ProjectDetail({ params }: Params) {
 
   return (
     <div className="halo-page px-6 py-16 max-w-5xl mx-auto">
+      {/* JSON-LD: Breadcrumbs + CreativeWork */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: toLdJson(
+            jsonLdBreadcrumb([
+              { name: params.locale === 'pt' ? 'Início' : params.locale === 'en' ? 'Home' : 'Inicio', url: canonical(`/${params.locale}`) },
+              { name: params.locale === 'pt' ? 'Portfolio' : 'Portfolio', url: canonical(`/${params.locale}/portfolio`) },
+              { name: data.title, url: canonical(`/${params.locale}/project/${params.slug}`) },
+            ])
+          ),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: toLdJson(
+            jsonLdCreativeWork({
+              title: data.title,
+              description: Array.isArray(data.tags) ? data.tags.join(' / ') : undefined,
+              url: canonical(`/${params.locale}/project/${params.slug}`),
+              image: cover || undefined,
+              datePublished: data.date || undefined,
+            })
+          ),
+        }}
+      />
       <div className="mb-6">
         {(() => {
           const tHome = params.locale === 'pt' ? 'Início' : params.locale === 'en' ? 'Home' : 'Inicio';
