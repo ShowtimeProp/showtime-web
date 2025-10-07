@@ -23,7 +23,13 @@ export default async function SiteHeader({ locale, basePath = "" }: { locale?: s
   }
 
   const title = (locale && data?.siteTitleLoc?.[locale]) || data?.siteTitleLoc?.es || data?.siteTitle || "Showtime Prop";
-  const tooltip = (locale && data?.descriptionLoc?.[locale]) || data?.descriptionLoc?.es || data?.description || "";
+  // Short, fixed tooltip per locale (UI-only) — avoids very long texts and double tooltips
+  const tooltipMap: Record<string, string> = {
+    es: "¡Impulsa tu Marketing Inmobiliario!",
+    en: "Boost your Real Estate Marketing!",
+    pt: "Impulsione seu Marketing Imobiliário!",
+  };
+  const tooltip = tooltipMap[(locale as string) || 'es'] || tooltipMap.es;
   const nav = (data?.navigation || [
     { label: "Soluciones", href: "/solutions" },
     { label: "Servicios", href: "/services" },
@@ -82,7 +88,7 @@ export default async function SiteHeader({ locale, basePath = "" }: { locale?: s
 
   return (
     <header className="fixed top-0 left-0 right-0 z-[9999] pointer-events-auto flex items-center justify-between px-6 py-4 border-b bg-[rgba(11,10,16,0.6)] backdrop-blur-md w-full">
-      <Link href={basePath || "/"} aria-label="Go to home" title={tooltip} className="brand-link group relative flex items-center gap-2">
+      <Link href={basePath || "/"} aria-label="Go to home" className="brand-link group relative flex items-center gap-2">
         {logoUrl ? (
           <Image src={logoUrl} alt="" aria-hidden width={28} height={28} className="brand-logo rounded" />
         ) : null}
