@@ -1,3 +1,4 @@
+"use client"
 import React, { useMemo, useState, useEffect } from 'react'
 import type { StringInputProps } from 'sanity'
 import { PatchEvent, set } from 'sanity'
