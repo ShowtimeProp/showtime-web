@@ -24,7 +24,7 @@ const query = `*[_type == "post" && slug.current == $slug][0]{
   categories,
   tags,
   publishedAt
-};
+}`;
 
 const relatedQuery = `*[_type == "post" && slug.current != $slug && (
   count((categories[])[@ in $cats]) > 0 || count((tags[])[@ in $tags]) > 0
