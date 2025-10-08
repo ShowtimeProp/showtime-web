@@ -36,6 +36,22 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      // Force locale prefix for any root path not starting with allowed prefixes
+      {
+        source: '/:path((?!es|en|pt|_next|api|studio|favicon\\.ico|robots\\.txt|sitemap\\.xml).*)',
+        destination: '/es',
+        permanent: true,
+      },
+      // If locale-prefixed but first section is unknown, collapse to '/:locale'
+      {
+        source: '/:locale(es|en|pt)/:first((?!services|solutions|portfolio|project|blog|contact).*)',
+        destination: '/:locale',
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return [
       // Services localized paths

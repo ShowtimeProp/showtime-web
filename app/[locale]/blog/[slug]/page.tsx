@@ -10,17 +10,21 @@ import { renderPattern } from "@/lib/seo";
 export const revalidate = 60;
 
 const query = `*[_type == "post" && slug.current == $slug][0]{
-  _id,
   "title": coalesce(titleLoc[$locale], titleLoc.es, titleLoc.en, titleLoc.pt, title),
   "short": coalesce(excerptLoc[$locale], excerptLoc.es, excerptLoc.en, excerptLoc.pt, excerpt),
   "body": coalesce(bodyLoc[$locale], bodyLoc.es, bodyLoc.en, bodyLoc.pt, body),
   mainImage,
   videoUrl,
+  "seo": {
+    "title": coalesce(seoTitleLoc[$locale], seoTitleLoc.es, seoTitleLoc.en, seoTitleLoc.pt, title),
+    "description": coalesce(seoDescriptionLoc[$locale], seoDescriptionLoc.es, seoDescriptionLoc.en, seoDescriptionLoc.pt, excerpt),
+    "image": coalesce(ogImage, mainImage, siteImage)
+  },
   videoPoster,
   categories,
   tags,
   publishedAt
-}`;
+};
 
 const relatedQuery = `*[_type == "post" && slug.current != $slug && (
   count((categories[])[@ in $cats]) > 0 || count((tags[])[@ in $tags]) > 0
@@ -297,9 +301,11 @@ export async function generateMetadata({ params }: { params: { locale: string; s
   const patTitle = seoPatterns?.titlePostLoc?.[params.locale] || (params.locale === 'pt' ? '[PostTitle] | [Brand]' : params.locale === 'en' ? '[PostTitle] | [Brand]' : '[PostTitle] | [Brand]');
   const patDesc = seoPatterns?.descPostLoc?.[params.locale] || (params.locale === 'pt' ? 'Resumo do artigo em uma frase.' : params.locale === 'en' ? 'One-line summary of the article.' : 'Resumen del artículo en una frase.');
   const postTitle = data?.title || (params.locale === 'pt' ? 'Artigo' : params.locale === 'en' ? 'Post' : 'Nota');
-  const t = renderPattern(patTitle, { Brand: brand, PostTitle: postTitle }, { title: 60 }).title;
-  const d = renderPattern(patDesc, { PostTitle: postTitle }, { description: 155 }).description;
-  const ogImage = data?.mainImage ? urlFor(data.mainImage).width(1200).height(630).url() : siteImg;
+  const perItemTitle = (data as any)?.seoTitleLoc?.[params.locale] as string | undefined;
+  const perItemDesc = (data as any)?.seoDescriptionLoc?.[params.locale] as string | undefined;
+  const t = (perItemTitle && perItemTitle.trim()) || renderPattern(patTitle, { Brand: brand, PostTitle: postTitle }, { title: 60 }).title;
+  const d = (perItemDesc && perItemDesc.trim()) || renderPattern(patDesc, { PostTitle: postTitle }, { description: 155 }).description;
+  const ogImage = (data as any)?.ogImage ? urlFor((data as any).ogImage).width(1200).height(630).url() : (data?.mainImage ? urlFor(data.mainImage).width(1200).height(630).url() : siteImg);
   return {
     title: t,
     description: d,

@@ -2,7 +2,7 @@ import { sanityClient } from "@/lib/sanity/client";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import EditorialBody from "@/components/EditorialBody";
 import Image from "next/image";
-import { imgPresets } from "@/lib/sanity/image";
+import { imgPresets, urlFor } from "@/lib/sanity/image";
 import { buildAlternatesFor, canonical, renderPattern } from "@/lib/seo";
 import { fetchSiteMeta } from "@/lib/site";
 
@@ -15,22 +15,27 @@ const query = `*[_type == "solution" && slug.current == $slug][0]{
   "body": coalesce(bodyLoc[$locale], bodyLoc.es, bodyLoc.en, bodyLoc.pt, body),
   price,
   oldPrice,
-  cashDiscountPct,
   badge,
   icon,
   videoUrl,
   videoPoster,
+  seoTitleLoc,
+  seoDescriptionLoc,
+  ogImage,
 }`;
 
 export async function generateMetadata({ params }: { params: { locale: string; slug: string } }) {
   const data = await sanityClient.fetch(query, { slug: params.slug, locale: params.locale }).catch(() => null);
-  const { seoPatterns, brandShort, description: siteDesc, base } = await fetchSiteMeta(params.locale);
+  const { seoPatterns, brandShort, description: siteDesc, image: siteImg, base } = await fetchSiteMeta(params.locale);
   const brand = brandShort || 'Showtime Prop';
   const patTitle = seoPatterns?.titleSolutionLoc?.[params.locale] || (params.locale === 'pt' ? '[SolutionTitle] | [Brand]' : params.locale === 'en' ? '[SolutionTitle] | [Brand]' : '[SolutionTitle] | [Brand]');
   const patDesc = seoPatterns?.descSolutionLoc?.[params.locale] || (params.locale === 'pt' ? '[SolutionTitle]. Benefício principal.' : params.locale === 'en' ? '[SolutionTitle]. Key benefit.' : '[SolutionTitle]. Beneficio principal.');
   const solutionTitle = data?.title || (params.locale === 'pt' ? 'Solução' : params.locale === 'en' ? 'Solution' : 'Solución');
-  const t = renderPattern(patTitle, { Brand: brand, SolutionTitle: solutionTitle }, { title: 60 }).title;
-  const d = renderPattern(patDesc, { SolutionTitle: solutionTitle }, { description: 155 }).description || siteDesc || '';
+  const perItemTitle = (data as any)?.seoTitleLoc?.[params.locale] as string | undefined;
+  const perItemDesc = (data as any)?.seoDescriptionLoc?.[params.locale] as string | undefined;
+  const t = (perItemTitle && perItemTitle.trim()) || renderPattern(patTitle, { Brand: brand, SolutionTitle: solutionTitle }, { title: 60 }).title;
+  const d = (perItemDesc && perItemDesc.trim()) || renderPattern(patDesc, { SolutionTitle: solutionTitle }, { description: 155 }).description || siteDesc || '';
+  const ogImage = (data as any)?.ogImage ? urlFor((data as any).ogImage).width(1200).height(630).url() : (data?.icon ? urlFor(data.icon).width(1200).height(630).url() : siteImg);
   return {
     title: t,
     description: d,
@@ -38,8 +43,8 @@ export async function generateMetadata({ params }: { params: { locale: string; s
       ...buildAlternatesFor({ es: `/es/soluciones/${params.slug}`, pt: `/pt/solucoes/${params.slug}`, en: `/en/solutions/${params.slug}` }),
       canonical: canonical(`/${params.locale}/solutions/${params.slug}`),
     },
-    openGraph: { title: t, description: d, type: 'article', url: `${base}/${params.locale}/solutions/${params.slug}` },
-    twitter: { card: 'summary', title: t, description: d },
+    openGraph: { title: t, description: d, type: 'article', url: `${base}/${params.locale}/solutions/${params.slug}`, images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: t }] : undefined },
+    twitter: { card: 'summary_large_image', title: t, description: d, images: ogImage ? [ogImage] : undefined },
   } as any;
 }
 

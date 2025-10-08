@@ -18,6 +18,12 @@ export default defineType({
     defineField({ name: "categories", title: "Categories", type: "array", of: [{ type: "string" }] }),
     defineField({ name: "tags", title: "Tags", type: "array", of: [{ type: "string" }] }),
     defineField({ name: "publishedAt", title: "Published at", type: "datetime", initialValue: () => new Date().toISOString() }),
+
+    // SEO per item
+    defineField({ name: "seoTitleLoc", title: "SEO Title (localized)", type: "localeSeoTitle" }),
+    defineField({ name: "seoDescriptionLoc", title: "SEO Description (localized)", type: "localeSeoDescription" }),
+    defineField({ name: "ogImage", title: "OG Image (optional)", type: "image", options: { hotspot: true } }),
+    defineField({ name: "autoSyncSeo", title: "Auto-sync translations if not manually edited", type: "boolean", initialValue: true }),
   ],
   preview: {
     select: { title: "title", media: "mainImage" },

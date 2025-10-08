@@ -31,7 +31,10 @@ const query = `*[_type == "service" && slug.current == $slug][0]{
   "body": coalesce(bodyLoc[$locale], bodyLoc.es, bodyLoc.en, bodyLoc.pt, body),
   icon,
   videoUrl,
-  videoPoster
+  videoPoster,
+  seoTitleLoc,
+  seoDescriptionLoc,
+  ogImage
 }`;
 
 export async function generateMetadata({ params }: Params) {
@@ -41,10 +44,12 @@ export async function generateMetadata({ params }: Params) {
   const patTitle = seoPatterns?.titleServiceLoc?.[params.locale] || (params.locale === 'pt' ? '[ServiceTitle] | [Brand]' : params.locale === 'en' ? '[ServiceTitle] | [Brand]' : '[ServiceTitle] | [Brand]');
   const patDesc = seoPatterns?.descServiceLoc?.[params.locale] || (params.locale === 'pt' ? '[ServiceTitle]. Benefício principal.' : params.locale === 'en' ? '[ServiceTitle]. Key benefit.' : '[ServiceTitle]. Beneficio principal.');
   const serviceTitle = data?.title || (params.locale === 'pt' ? 'Serviço' : params.locale === 'en' ? 'Service' : 'Servicio');
-  const t = renderPattern(patTitle, { Brand: brand, ServiceTitle: serviceTitle }, { title: 60 }).title;
-  const baseDesc = data?.short || siteDesc || '';
-  const d = data?.short ? renderPattern(patDesc, { ServiceTitle: serviceTitle }, { description: 155 }).description : renderPattern(patDesc, { ServiceTitle: serviceTitle }, { description: 155 }).description || baseDesc;
-  const ogImage = data?.icon ? urlFor(data.icon).width(1200).height(630).url() : siteImg;
+  const perItemTitle = (data as any)?.seoTitleLoc?.[params.locale] as string | undefined;
+  const perItemDesc = (data as any)?.seoDescriptionLoc?.[params.locale] as string | undefined;
+  const t = (perItemTitle && perItemTitle.trim()) || renderPattern(patTitle, { Brand: brand, ServiceTitle: serviceTitle }, { title: 60 }).title;
+  const baseDesc = perItemDesc || data?.short || siteDesc || '';
+  const d = baseDesc ? baseDesc : renderPattern(patDesc, { ServiceTitle: serviceTitle }, { description: 155 }).description;
+  const ogImage = (data as any)?.ogImage ? urlFor((data as any).ogImage).width(1200).height(630).url() : (data?.icon ? urlFor(data.icon).width(1200).height(630).url() : siteImg);
   return {
     title: t,
     description: d,
