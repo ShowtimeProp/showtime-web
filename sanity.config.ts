@@ -3,6 +3,7 @@ import { visionTool } from "@sanity/vision";
 import { structureTool } from "sanity/structure";
 import { schemaTypes } from "./sanity/schemas";
 import VisionHelp from "./sanity/components/VisionHelp";
+import { AutoTranslateAction, withAutoSyncPublish } from "./sanity/components/actions/AutoTranslateAction";
 
 // NextStudio loads this config in the browser too, so we must read from NEXT_PUBLIC_* envs.
 // Fallback to server-only vars if present during build.
@@ -43,5 +44,18 @@ export default defineConfig({
   ],
   schema: {
     types: schemaTypes,
+  },
+  document: {
+    actions: (prev, context) => {
+      // Wrap Publish with auto-sync behavior for our doc types
+      const wrapped = prev.map((action) => {
+        if (action.action === 'publish') {
+          return withAutoSyncPublish(action);
+        }
+        return action;
+      });
+      // Add Auto-translate button
+      return [AutoTranslateAction, ...wrapped];
+    },
   },
 });
