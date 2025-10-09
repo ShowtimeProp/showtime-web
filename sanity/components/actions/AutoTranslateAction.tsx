@@ -1,6 +1,7 @@
 "use client"
 import React, {useState} from 'react'
 import {useClient} from 'sanity'
+import {useToast} from '@sanity/ui'
 import type {DocumentActionComponent, DocumentActionProps} from 'sanity'
 
 const apiVersion = '2023-10-01'
@@ -13,6 +14,7 @@ function clamp(s: string, max: number) {
 
 export const AutoTranslateAction: DocumentActionComponent = (props: DocumentActionProps) => {
   const client = useClient({apiVersion})
+  const toast = useToast()
   const [busy, setBusy] = useState(false)
 
   const isSeoDoc = ['service','solution','post','project'].includes(props.type)
@@ -37,6 +39,7 @@ export const AutoTranslateAction: DocumentActionComponent = (props: DocumentActi
           body: JSON.stringify({titleEs, descriptionEs: descEs, dryRun: true})
         })
         const json = await res.json()
+        let patchedCount = 0
         if (res.ok && json?.result) {
           const {en, pt} = json.result as any
           const patchSEO: any = {set: {}}
@@ -46,6 +49,7 @@ export const AutoTranslateAction: DocumentActionComponent = (props: DocumentActi
           if (!doc?.seoDescriptionLoc?.pt && pt?.description) patchSEO.set['seoDescriptionLoc.pt'] = clamp(pt.description, 155)
           if (Object.keys(patchSEO.set).length) {
             await client.patch(id).set(patchSEO.set).commit()
+            patchedCount += Object.keys(patchSEO.set).length
           }
         }
 
@@ -74,11 +78,26 @@ export const AutoTranslateAction: DocumentActionComponent = (props: DocumentActi
           if (!doc?.bodyLoc?.pt && cpt?.body) patchC.set['bodyLoc.pt'] = cpt.body
           if (Object.keys(patchC.set).length) {
             await client.patch(id).set(patchC.set).commit()
+            patchedCount += Object.keys(patchC.set).length
           }
+        }
+
+        if (patchedCount > 0) {
+          toast.push({
+            status: 'success',
+            title: 'Auto-traducción aplicada',
+            description: `${patchedCount} campo(s) completado(s) en EN/PT. Revisa y publica cuando quieras.`,
+          })
+        } else {
+          toast.push({
+            status: 'info',
+            title: 'Sin cambios',
+            description: 'EN/PT ya tenían valores. No se modificó nada.',
+          })
         }
       } catch (e) {
         console.error(e)
-        alert('Error aplicando traducciones')
+        toast.push({ status: 'error', title: 'Error al traducir', description: 'Revisa consola/Network para más detalles.' })
       } finally {
         setBusy(false)
       }
@@ -89,6 +108,7 @@ export const AutoTranslateAction: DocumentActionComponent = (props: DocumentActi
 export const withAutoSyncPublish = (original: DocumentActionComponent): DocumentActionComponent => {
   const Comp: DocumentActionComponent = (props) => {
     const client = useClient({apiVersion})
+    const toast = useToast()
     const isSeoDoc = ['service','solution','post','project'].includes(props.type)
     if (!isSeoDoc) return original(props)
 
@@ -151,8 +171,10 @@ export const withAutoSyncPublish = (original: DocumentActionComponent): Document
                 }
               }
             }
+            // Toast informativo de auto-sync
+            toast.push({ status: 'success', title: 'Auto-sync SEO/Contenido ejecutado', description: 'Se intentó completar EN/PT vacíos antes de publicar.' })
           } catch (e) {
-            console.warn('Auto-sync SEO skipped:', e)
+            toast.push({ status: 'warning', title: 'Auto-sync omitido', description: 'Ocurrió un error durante la sincronización.' })
           }
         }
         // continue original publish

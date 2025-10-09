@@ -4,6 +4,7 @@ import { structureTool } from "sanity/structure";
 import { schemaTypes } from "./sanity/schemas";
 import VisionHelp from "./sanity/components/VisionHelp";
 import { AutoTranslateAction, withAutoSyncPublish } from "./sanity/components/actions/AutoTranslateAction";
+import { PublishReminderBadge } from "./sanity/components/actions/PublishReminderBadge";
 
 // NextStudio loads this config in the browser too, so we must read from NEXT_PUBLIC_* envs.
 // Fallback to server-only vars if present during build.
@@ -57,5 +58,6 @@ export default defineConfig({
       // Add Auto-translate button
       return [AutoTranslateAction, ...wrapped];
     },
+    badges: (prev) => [PublishReminderBadge, ...prev],
   },
 });
