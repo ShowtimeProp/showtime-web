@@ -10,6 +10,7 @@ export default defineType({
     defineField({ name: "description", title: "Description", type: "text" }),
     defineField({ name: "descriptionLoc", title: "Description (localized)", type: "localeText" }),
     defineField({ name: "logo", title: "Logo", type: "image", options: { hotspot: true } }),
+    defineField({ name: "waBubbleTextLoc", title: "WhatsApp bubble text (localized)", type: "localeString", description: "Text shown in the small chat bubble. Leave empty to use defaults." }),
     defineField({
       name: "navigation",
       title: "Navigation",
