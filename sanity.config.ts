@@ -47,16 +47,9 @@ export default defineConfig({
     types: schemaTypes,
   },
   document: {
-    actions: (prev, context) => {
-      // Wrap Publish with auto-sync behavior for our doc types
-      const wrapped = prev.map((action) => {
-        if (action.action === 'publish') {
-          return withAutoSyncPublish(action);
-        }
-        return action;
-      });
-      // Add Auto-translate button
-      return [AutoTranslateAction, ...wrapped];
+    actions: (prev) => {
+      // Do not wrap publish for now; keep original to ensure reliability
+      return [AutoTranslateAction, ...prev];
     },
     badges: (prev) => [PublishReminderBadge, ...prev],
   },
