@@ -32,17 +32,17 @@ export default function WhatsAppWidget({ locale, logoUrl, bubbleText }: Props) {
   const messages = useMemo(
     () => ({
       es: {
-        bubble: "👋 ¿Cómo podemos ayudarte hoy?",
+        bubble: "¿Cómo podemos ayudarte hoy?",
         wa: "🤖 Hola! Tengo una consulta sobre sus servicios.",
         aria: "Abrir WhatsApp",
       },
       en: {
-        bubble: "👋 How can we help you today?",
+        bubble: "How can we help you today?",
         wa: "🤖 Hi! I have a question about your services.",
         aria: "Open WhatsApp",
       },
       pt: {
-        bubble: "👋 Como podemos te ajudar hoje?",
+        bubble: "Como podemos te ajudar hoje?",
         wa: "🤖 Olá! Tenho uma dúvida sobre seus serviços.",
         aria: "Abrir WhatsApp",
       },
@@ -83,7 +83,18 @@ export default function WhatsAppWidget({ locale, logoUrl, bubbleText }: Props) {
   const triggerEmoji = decodeUnicodeEscapes(triggerEmojiRaw);
 
   const t = messages[locale] || messages.es;
-  const bubbleTextFinal = (bubbleText && bubbleText.trim()) || overrideBubble || t.bubble;
+  // Remove waving-hand emoji (anywhere, any skin tone; with/without VS) to avoid line breaks
+  function stripWavingHand(s: string) {
+    if (!s) return s;
+    try {
+      const re = /\u{1F44B}(?:\uFE0F)?(?:\u{1F3FB}|\u{1F3FC}|\u{1F3FD}|\u{1F3FE}|\u{1F3FF})?/gu;
+      return s.replace(re, '').replace(/\s{2,}/g, ' ').trim();
+    } catch {
+      // Fallback: simple replace of common form
+      return s.replace(/[\uD83D\uDC4B]/g,'').replace(/\s{2,}/g, ' ').trim();
+    }
+  }
+  const bubbleTextFinal = stripWavingHand((bubbleText && bubbleText.trim()) || overrideBubble || t.bubble);
 
   // Storage keys
   const dayKey = useMemo(() => `waBubble:count:${formatDateKey()}`, []);
@@ -218,16 +229,16 @@ export default function WhatsAppWidget({ locale, logoUrl, bubbleText }: Props) {
       {ready && showBubble ? (
         <div className="fixed z-50 max-w-xs text-sm" style={{ right: 28, bottom: 128 }} role="dialog" aria-label="Bot message">
           <div className="chat-bubble shadow-lg chat-enter" onClick={handleBubbleClick}>
-            <div className="chat-label">Showtime Bot</div>
-            <div className="chat-row">
+            <div className="chat-header">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="" width={18} height={18} className="avatar" loading="eager" decoding="async" />
               ) : (
                 <span className="avatar-fallback" aria-hidden>✨</span>
               )}
-              <div className="chat-text">{bubbleTextFinal}</div>
+              <div className="chat-label">Showtime Bot</div>
             </div>
+            <div className="chat-text">{bubbleTextFinal}</div>
             <button
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); closeBubble(); }}
               aria-label="Cerrar"
@@ -246,7 +257,8 @@ export default function WhatsAppWidget({ locale, logoUrl, bubbleText }: Props) {
         .chat-bubble { position: relative; background: #fff; color: #111827; border: 1px solid #e5e7eb; border-radius: 18px; padding: 10px 12px; max-width: 280px; box-shadow: 0 10px 24px rgba(0,0,0,0.18); cursor: pointer; z-index: 1001; }
         /* Rotated-square tail refined */
         .chat-bubble::before { content: ""; position: absolute; right: -6px; bottom: 20px; width: 12px; height: 12px; background: #ffffff; transform: rotate(45deg); border-left: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb; box-shadow: 0 3px 8px rgba(0,0,0,0.10); }
-        .chat-label { font-weight: 700; font-size: 0.78rem; color: #111827; opacity: 0.75; margin-bottom: 2px; }
+        .chat-header { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
+        .chat-label { font-weight: 700; font-size: 0.78rem; color: #111827; opacity: 0.75; }
         .chat-row { display: flex; align-items: flex-start; gap: 8px; }
         .chat-text { font-size: 0.95rem; line-height: 1.25rem; }
         .avatar { display: block; width: 18px; height: 18px; border-radius: 9999px; object-fit: cover; margin-top: 2px; }

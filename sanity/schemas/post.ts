@@ -10,6 +10,8 @@ export default defineType({
     defineField({ name: "slug", title: "Slug", type: "slug", options: { source: "title" }, validation: (r) => r.required() }),
     defineField({ name: "excerpt", title: "Excerpt", type: "text" }),
     defineField({ name: "excerptLoc", title: "Excerpt (localized)", type: "localeText" }),
+    // Deprecated compatibility: some older posts may still have "shortLoc"; keep hidden to avoid warnings
+    defineField({ name: "shortLoc", title: "Short (localized) [deprecated]", type: "localeText", hidden: true, description: "Use Excerpt (localized) instead" }),
     defineField({ name: "body", title: "Body", type: "array", of: [{ type: "block" }] }),
     defineField({ name: "bodyLoc", title: "Body (localized)", type: "localeBlock" }),
     defineField({ name: "mainImage", title: "Main image", type: "image", options: { hotspot: true } }),
@@ -82,6 +84,8 @@ export default defineType({
       { title: "YouTube", value: "youtube" },
       { title: "Google Maps", value: "google-maps" },
     ] } }),
+    // Deprecated compatibility: generic tags kept hidden
+    defineField({ name: "tags", title: "Tags [deprecated]", type: "array", of: [{ type: "string" }], hidden: true, description: "Use Industry/Objective/Format/Platform tags" }),
     defineField({ name: "publishedAt", title: "Published at", type: "datetime", initialValue: () => new Date().toISOString() }),
 
     // SEO per item
