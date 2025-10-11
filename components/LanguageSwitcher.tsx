@@ -23,36 +23,31 @@ export default function LanguageSwitcher({ currentLocale }: Props) {
 
   const others = locales.filter((l) => l !== (currentLocale as any));
 
-  // Map of localized route segments
-  const segmentFamilies: Record<string, string[]> = {
-    services: ["services", "servicios", "servicos"],
-    portfolio: ["portfolio", "portafolio"],
-    project: ["project", "proyecto", "projeto"],
-    contact: ["contact", "contacto"],
+  // Normalize any localized top-level segment to canonical path used by the app routing
+  const toCanonical = (p: string) => {
+    const map: Record<string, string> = {
+      soluciones: 'solutions',
+      solucoes: 'solutions',
+      servicios: 'services',
+      servicos: 'services',
+      portafolio: 'portfolio',
+      contato: 'contact',
+      contacto: 'contact',
+      projeto: 'project',
+      proyecto: 'project',
+      notas: 'blog',
+      artigos: 'blog',
+    };
+    const seg = p.split('/')[1] || '';
+    const normalized = map[seg] || seg;
+    if (normalized === seg) return p;
+    return `/${normalized}${p.slice(seg.length + 1)}`;
   };
 
-  const targetSegmentFor = (family: string, to: string) => {
-    if (family === "services") return to === "es" ? "servicios" : to === "pt" ? "servicos" : "services";
-    if (family === "portfolio") return to === "es" ? "portafolio" : "portfolio"; // pt/en use 'portfolio'
-    if (family === "project") return to === "es" ? "proyecto" : to === "pt" ? "projeto" : "project";
-    if (family === "contact") return to === "es" ? "contacto" : "contact"; // pt/en use 'contact'
-    return undefined;
-  };
-
-  const translatePath = (path: string, to: string) => {
+  const translatePath = (path: string, _to: string) => {
     if (!path || path === "/") return "/";
-    const parts = path.split("/").filter(Boolean);
-    if (!parts.length) return "/";
-    const first = parts[0];
-    // Find which family this first segment belongs to
-    let matchedFamily: string | undefined;
-    for (const [fam, variants] of Object.entries(segmentFamilies)) {
-      if (variants.includes(first)) { matchedFamily = fam; break; }
-    }
-    if (matchedFamily) {
-      parts[0] = targetSegmentFor(matchedFamily, to) || first;
-    }
-    return "/" + parts.join("/");
+    // Do NOT localize segments; keep canonical so routes exist in all locales
+    return toCanonical(path);
   };
 
   const go = (locale: string) => {

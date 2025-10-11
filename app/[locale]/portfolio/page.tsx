@@ -82,8 +82,8 @@ export default async function PortfolioPage({ params }: { params: { locale: stri
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {list.map((it) => {
           const img = it.thumb ? imgPresets.tile(it.thumb) : null;
-          const parent = locale === 'es' ? '/proyecto' : locale === 'pt' ? '/projeto' : '/project';
-          const href = it.slug ? `${basePath}${parent}/${it.slug}` : "#";
+          // Use canonical segment for details route in all locales
+          const href = it.slug ? `${basePath}/project/${it.slug}` : "#";
           return (
             <HaloFrame key={it._id} size={900} baseOpacity={0.08} hoverOpacity={0.35}>
               <SpotCard href={href} className="overflow-hidden">
