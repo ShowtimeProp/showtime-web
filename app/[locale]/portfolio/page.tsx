@@ -5,6 +5,7 @@ import { buildAlternatesFor, renderPattern } from "@/lib/seo";
 import { fetchSiteMeta } from "@/lib/site";
 import SpotCard from "@/components/SpotCard";
 import HaloFrame from "@/components/HaloFrame";
+import PortfolioIndexClient from "@/components/PortfolioIndexClient";
 
 export const revalidate = 60;
 
@@ -12,6 +13,8 @@ const query = `*[_type == "project"] | order(coalesce(date, now()) desc){
   _id,
   "title": coalesce(titleLoc[$locale], titleLoc.es, titleLoc.en, titleLoc.pt, title),
   tags,
+  category,
+  categories,
   thumb,
   videoUrl,
   videoPoster,
@@ -29,14 +32,6 @@ export default async function PortfolioPage({ params }: { params: { locale: stri
   } catch {}
 
   const fallback = items.length === 0;
-  const list =
-    items.length > 0
-      ? items
-      : [
-          { _id: "1", title: "Proyecto de ejemplo", tags: ["Demo"], thumb: null },
-          { _id: "2", title: "Proyecto 2", tags: ["Demo"], thumb: null },
-          { _id: "3", title: "Proyecto 3", tags: ["Demo"], thumb: null },
-        ];
 
   const bunnyEmbed = (url: string) => {
     try {
@@ -79,75 +74,7 @@ export default async function PortfolioPage({ params }: { params: { locale: stri
           ? "Mostrando proyectos de ejemplo. Crea documentos 'Project' en el Studio para verlos aquí."
           : "Una selección de trabajos que muestran nuestro enfoque visual, técnico y orientado a resultados."}
       </p>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {list.map((it) => {
-          const img = it.thumb ? imgPresets.tile(it.thumb) : null;
-          // Use canonical segment for details route in all locales
-          const href = it.slug ? `${basePath}/project/${it.slug}` : "#";
-          return (
-            <HaloFrame key={it._id} size={900} baseOpacity={0.08} hoverOpacity={0.35}>
-              <SpotCard href={href} className="overflow-hidden">
-                <div className="relative" style={{background: "rgba(255,255,255,0.03)"}}>
-                  {/* Media priority: video > tour > image. Use taller aspect for tour on mobile for better UX */}
-                  {it.videoUrl ? (
-                    /(mediadelivery\.net|bunnycdn)/i.test(it.videoUrl) ? (
-                      <div className="aspect-video relative">
-                        <iframe
-                          src={bunnyEmbed(it.videoUrl)}
-                          className="absolute inset-0 w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                          loading="lazy"
-                          allowFullScreen
-                          referrerPolicy="no-referrer"
-                        />
-                      </div>
-                    ) : (
-                      <div className="aspect-video relative">
-                        <iframe
-                          src={videoEmbed(it.videoUrl)}
-                          className="absolute inset-0 w-full h-full"
-                          title={it.title}
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
-                          loading="lazy"
-                          allowFullScreen
-                        />
-                      </div>
-                    )
-                  ) : it.tourUrl ? (
-                    <div className="aspect-[9/16] sm:aspect-[4/3] md:aspect-video relative">
-                      <iframe
-                        src={it.tourUrl}
-                        className="absolute inset-0 w-full h-full"
-                        allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer; picture-in-picture"
-                        loading="lazy"
-                        allowFullScreen
-                        referrerPolicy="no-referrer"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-video relative">
-                      {img ? <Image src={img} alt={it.title} fill className="object-cover object-top" /> : null}
-                    </div>
-                  )}
-                </div>
-                <div className="p-4 flex items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold">{it.title}</h3>
-                    {it.tags?.length ? (
-                      <p className="text-xs text-muted">{it.tags.join(" / ")}</p>
-                    ) : null}
-                  </div>
-                  <div className="shrink-0">
-                    <span className="btn btn-primary btn-xs !px-2 !py-1 !h-7 text-[11px] leading-tight">
-                      {locale === 'pt' ? 'Ver detalhes' : locale === 'en' ? 'View details' : 'Ver detalles'}
-                    </span>
-                  </div>
-                </div>
-              </SpotCard>
-            </HaloFrame>
-          );
-        })}
-      </div>
+      <PortfolioIndexClient locale={locale} basePath={basePath} items={items} />
     </div>
   );
 }
