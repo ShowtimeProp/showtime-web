@@ -31,6 +31,40 @@ export default function PortfolioIndexClient({
   const [activeCat, setActiveCat] = React.useState<string | null>(null);
   const [activeTag, setActiveTag] = React.useState<string | null>(null);
 
+  // Helpers copied from the original portfolio page: prioritize Bunny/YouTube/Vimeo embeds, then tours, then thumbnail
+  const bunnyEmbed = React.useCallback((url: string) => {
+    try {
+      let u = url;
+      if (/mediadelivery\.net\/play\//i.test(u)) u = u.replace(/\/play\//i, '/embed/');
+      const parsed = new URL(u);
+      if (!parsed.searchParams.has('autoplay')) parsed.searchParams.set('autoplay', 'false');
+      if (!parsed.searchParams.has('muted')) parsed.searchParams.set('muted', 'true');
+      if (!parsed.searchParams.has('controls')) parsed.searchParams.set('controls', 'true');
+      return parsed.toString();
+    } catch {
+      return url;
+    }
+  }, []);
+
+  const videoEmbed = React.useCallback((url: string) => {
+    try {
+      let u = url.trim();
+      const yt = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/i);
+      if (yt) {
+        const id = yt[1];
+        return `https://www.youtube.com/embed/${id}?rel=0&modestbranding=1`;
+      }
+      const vimeo = u.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+      if (vimeo) {
+        const id = vimeo[1];
+        return `https://player.vimeo.com/video/${id}`;
+      }
+      return url;
+    } catch {
+      return url;
+    }
+  }, []);
+
   const t = (key: "search" | "categories" | "tags" | "all") => {
     const dict: Record<string, Record<string, string>> = {
       es: { search: "Buscar en el portfolio", categories: "Categors", tags: "Etiquetas", all: "Todos" },
@@ -136,9 +170,47 @@ export default function PortfolioIndexClient({
             <HaloFrame key={it._id} size={900} baseOpacity={0.08} hoverOpacity={0.35}>
               <SpotCard href={href} className="overflow-hidden">
                 <div className="relative" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <div className="aspect-video relative">
-                    {img ? <img src={img} alt={it.title} className="w-full h-full object-cover object-top" /> : null}
-                  </div>
+                  {/* Media priority: video > tour > image. Use same behavior as original portfolio page. */}
+                  {it.videoUrl ? (
+                    /(mediadelivery\.net|bunnycdn)/i.test(it.videoUrl) ? (
+                      <div className="aspect-video relative">
+                        <iframe
+                          src={bunnyEmbed(it.videoUrl)}
+                          className="absolute inset-0 w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                          loading="lazy"
+                          allowFullScreen
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-video relative">
+                        <iframe
+                          src={videoEmbed(it.videoUrl)}
+                          className="absolute inset-0 w-full h-full"
+                          title={it.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                          loading="lazy"
+                          allowFullScreen
+                        />
+                      </div>
+                    )
+                  ) : it.tourUrl ? (
+                    <div className="aspect-[9/16] sm:aspect-[4/3] md:aspect-video relative">
+                      <iframe
+                        src={it.tourUrl}
+                        className="absolute inset-0 w-full h-full"
+                        allow="fullscreen; xr-spatial-tracking; gyroscope; accelerometer; picture-in-picture"
+                        loading="lazy"
+                        allowFullScreen
+                        referrerPolicy="no-referrer"
+                      />
+                    </div>
+                  ) : (
+                    <div className="aspect-video relative">
+                      {img ? <img src={img} alt={it.title} className="w-full h-full object-cover object-top" /> : null}
+                    </div>
+                  )}
                 </div>
                 <div className="p-4 flex items-start justify-between gap-3">
                   <div>
