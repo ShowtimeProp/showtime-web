@@ -30,7 +30,7 @@ export default async function LocaleLayout({
       <HaloParallax />
       <SiteHeader locale={locale} basePath={basePath} />
       <main className="pt-20">{children}</main>
-      <SiteFooter locale={locale} />
+      <SiteFooter locale={locale} basePath={basePath} />
       {/* Floating WhatsApp widget */}
       <WhatsAppWidget locale={locale as 'es' | 'en' | 'pt'} logoUrl={logoUrl || undefined} bubbleText={bubbleText} />
     </>

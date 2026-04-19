@@ -28,6 +28,24 @@ export default defineType({
         }),
       ],
     }),
+    defineField({
+      name: "footerLinks",
+      title: "Footer links",
+      description: "Legal or secondary links shown below the copyright line (e.g. privacy, terms). Use paths like /privacy or full URLs.",
+      type: "array",
+      of: [
+        defineField({
+          name: "footerLink",
+          title: "Footer link",
+          type: "object",
+          fields: [
+            defineField({ name: "label", title: "Label (fallback)", type: "string" }),
+            defineField({ name: "labelLoc", title: "Label (localized)", type: "localeString" }),
+            defineField({ name: "href", title: "Href", type: "string", validation: (r) => r.required() }),
+          ],
+        }),
+      ],
+    }),
     defineField({ name: "ogImage", title: "OG Image", type: "image", options: { hotspot: true } }),
     defineField({
       name: "seoPatterns",

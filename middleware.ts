@@ -36,7 +36,7 @@ export function middleware(req: NextRequest) {
     const currentLocale = localePrefixed[1];
     const rest = (localePrefixed[2] || '').split('/').filter(Boolean);
     const first = rest[0] || '';
-    const allowed = new Set(['', 'services', 'solutions', 'portfolio', 'project', 'blog', 'contact']);
+    const allowed = new Set(['', 'services', 'solutions', 'portfolio', 'project', 'blog', 'contact', 'privacy', 'terms']);
     const url = req.nextUrl.clone();
 
     // Strip legacy Woo query like add-to-cart
