@@ -68,6 +68,22 @@ function localizePath(path: string, basePath: string) {
   return `${basePath}${canonical}`;
 }
 
+/** Evita /es/privacy → localizePath → /es/es/privacy (el middleware no reconoce el primer segmento y manda al home). */
+function stripLeadingLocalePath(pathname: string): string {
+  const clean = pathname.split("?")[0].replace(/\/+$/, "") || "/";
+  const m = clean.match(/^\/(es|en|pt)(\/.*)?$/);
+  if (!m) return clean;
+  const rest = m[2];
+  if (!rest) return "/";
+  return rest;
+}
+
+function resolveFooterHref(path: string, basePath: string) {
+  const withoutLocale = stripLeadingLocalePath(path);
+  if (withoutLocale === "/") return basePath || "/";
+  return localizePath(withoutLocale, basePath);
+}
+
 export default async function SiteFooter({
   locale = "es",
   basePath = "",
@@ -103,7 +119,7 @@ export default async function SiteFooter({
             const isExternal =
               !internalFromUrl &&
               (/^https?:\/\//i.test(item.href) || item.href.startsWith("mailto:") || item.href.startsWith("tel:"));
-            const href = isExternal ? item.href : localizePath(path, basePath || `/${locale}`);
+            const href = isExternal ? item.href : resolveFooterHref(path, basePath || `/${locale}`);
             return (
               <span key={`${idx}-${item.href}`} className="inline-flex items-center gap-x-3">
                 {idx > 0 ? <span className="text-white/25 select-none" aria-hidden="true">·</span> : null}
