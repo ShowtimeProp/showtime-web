@@ -12,6 +12,25 @@ export default defineType({
     defineField({ name: "logo", title: "Logo", type: "image", options: { hotspot: true } }),
     defineField({ name: "waBubbleTextLoc", title: "WhatsApp bubble text (localized)", type: "localeString", description: "Text shown in the small chat bubble. Leave empty to use defaults." }),
     defineField({
+      name: "footerLinks",
+      title: "Footer links",
+      description:
+        "Enlaces legales u otros (copyright). Ej. /privacy y /terms, o URL externa. Aparecen en el pie del sitio.",
+      type: "array",
+      of: [
+        defineField({
+          name: "footerLink",
+          title: "Footer link",
+          type: "object",
+          fields: [
+            defineField({ name: "label", title: "Label (fallback)", type: "string" }),
+            defineField({ name: "labelLoc", title: "Label (localized)", type: "localeString" }),
+            defineField({ name: "href", title: "Href", type: "string", validation: (r) => r.required() }),
+          ],
+        }),
+      ],
+    }),
+    defineField({
       name: "navigation",
       title: "Navigation",
       type: "array",
@@ -24,24 +43,6 @@ export default defineType({
             defineField({ name: "label", title: "Label", type: "string" }),
             defineField({ name: "labelLoc", title: "Label (localized)", type: "localeString" }),
             defineField({ name: "href", title: "Href", type: "string" }),
-          ],
-        }),
-      ],
-    }),
-    defineField({
-      name: "footerLinks",
-      title: "Footer links",
-      description: "Legal or secondary links shown below the copyright line (e.g. privacy, terms). Use paths like /privacy or full URLs.",
-      type: "array",
-      of: [
-        defineField({
-          name: "footerLink",
-          title: "Footer link",
-          type: "object",
-          fields: [
-            defineField({ name: "label", title: "Label (fallback)", type: "string" }),
-            defineField({ name: "labelLoc", title: "Label (localized)", type: "localeString" }),
-            defineField({ name: "href", title: "Href", type: "string", validation: (r) => r.required() }),
           ],
         }),
       ],
