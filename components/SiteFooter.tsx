@@ -1,5 +1,21 @@
 import Link from "next/link";
 import { sanityClient } from "@/lib/sanity/client";
+import { getBaseUrl } from "@/lib/seo";
+
+/** Si el href es https del mismo dominio, lo tratamos como ruta interna (evita abrir pestaña y bugs de middleware). */
+function sameOriginPath(href: string): string | null {
+  try {
+    if (!/^https?:\/\//i.test(href)) return null;
+    const url = new URL(href);
+    const site = new URL(getBaseUrl());
+    const a = url.hostname.replace(/^www\./i, "").toLowerCase();
+    const b = site.hostname.replace(/^www\./i, "").toLowerCase();
+    if (a !== b) return null;
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return null;
+  }
+}
 
 const query = `*[_type == "siteSettings"][0]{
   footerLinks[]{label, labelLoc, href}
@@ -82,9 +98,12 @@ export default async function SiteFooter({
           aria-label="Legal"
         >
           {items.map((item, idx) => {
+            const internalFromUrl = sameOriginPath(item.href);
+            const path = internalFromUrl ?? item.href;
             const isExternal =
-              /^https?:\/\//i.test(item.href) || item.href.startsWith("mailto:") || item.href.startsWith("tel:");
-            const href = isExternal ? item.href : localizePath(item.href, basePath || `/${locale}`);
+              !internalFromUrl &&
+              (/^https?:\/\//i.test(item.href) || item.href.startsWith("mailto:") || item.href.startsWith("tel:"));
+            const href = isExternal ? item.href : localizePath(path, basePath || `/${locale}`);
             return (
               <span key={`${idx}-${item.href}`} className="inline-flex items-center gap-x-3">
                 {idx > 0 ? <span className="text-white/25 select-none" aria-hidden="true">·</span> : null}

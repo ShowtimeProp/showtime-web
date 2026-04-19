@@ -3,6 +3,7 @@ import solution from "./solution";
 import post from "./post";
 import project from "./project";
 import siteSettings from "./siteSettings";
+import legalPage from "./legalPage";
 import home from "./home";
 import localeString from "./_localeString";
 import localeText from "./_localeText";
@@ -23,5 +24,6 @@ export const schemaTypes = [
   post,
   project,
   siteSettings,
+  legalPage,
   home
 ];

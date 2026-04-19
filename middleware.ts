@@ -13,8 +13,13 @@ function detectLocale(req: NextRequest): string {
   return defaultLocale;
 }
 
+function stripTrailingSlash(path: string): string {
+  if (path === "/" || path.length <= 1) return path;
+  return path.replace(/\/+$/, "") || "/";
+}
+
 export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const pathname = stripTrailingSlash(req.nextUrl.pathname);
 
   // Ignore next internals, files and API
   if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.includes('.')) {
