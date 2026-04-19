@@ -30,13 +30,46 @@ export function middleware(req: NextRequest) {
     return res;
   }
 
+  // Top-level paths without locale (e.g. /policy, /terms) → /{locale}/...
+  const bare = pathname.match(/^\/([^/]+)$/);
+  if (bare) {
+    const seg = bare[1];
+    const localizable = new Set([
+      'policy',
+      'privacy',
+      'terms',
+      'contact',
+      'portfolio',
+      'blog',
+      'services',
+      'solutions',
+    ]);
+    if (localizable.has(seg)) {
+      const locale = detectLocale(req);
+      const url = req.nextUrl.clone();
+      url.pathname = `/${locale}/${seg}`;
+      return NextResponse.redirect(url, 301);
+    }
+  }
+
   // If already prefixed with a supported locale, normalize unknown sections
   const localePrefixed = pathname.match(/^\/(es|pt|en)(?:\/(.*))?$/);
   if (localePrefixed) {
     const currentLocale = localePrefixed[1];
     const rest = (localePrefixed[2] || '').split('/').filter(Boolean);
     const first = rest[0] || '';
-    const allowed = new Set(['', 'services', 'solutions', 'portfolio', 'project', 'blog', 'contact', 'privacy', 'terms']);
+    const allowed = new Set([
+      '',
+      'services',
+      'solutions',
+      'portfolio',
+      'project',
+      'blog',
+      'contact',
+      'privacy',
+      'terms',
+      'policy',
+    ]);
     const url = req.nextUrl.clone();
 
     // Strip legacy Woo query like add-to-cart
